@@ -1,0 +1,381 @@
+# System Architecture
+
+Deep dive into the JJC Trading Bot system design, demonstrating software engineering principles applied to quantitative trading.
+
+## High-Level Design
+
+### Component Interaction
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            USER / RESEARCHER                                 │
+│                                    │                                         │
+│                    ┌───────────────┼───────────────┐                        │
+│                    ▼               ▼               ▼                        │
+│             ┌──────────┐    ┌──────────┐    ┌──────────┐                   │
+│             │  CLI     │    │  Config  │    │  Docs    │                   │
+│             │  Args    │    │  (.env)  │    │  (MD)    │                   │
+│             └────┬─────┘    └────┬─────┘    └──────────┘                   │
+│                  │               │                                          │
+│                  ▼               ▼                                          │
+│         ┌────────────────────────────────────┐                              │
+│         │        OPTIMIZATION LOOP           │                              │
+│         │  ┌──────────────────────────────┐  │                              │
+│         │  │     State Machine            │  │                              │
+│         │  │  ┌─────┐  ┌─────┐  ┌─────┐  │  │                              │
+│         │  │  │INIT │─►│TEST │─►│EVAL │  │  │                              │
+│         │  │  └─────┘  └──┬──┘  └──┬──┘  │  │                              │
+│         │  │              │        │     │  │                              │
+│         │  │         ┌────┘        └───┐ │  │                              │
+│         │  │         ▼                 ▼ │  │                              │
+│         │  │    ┌─────────┐     ┌───────┴─┐│                              │
+│         │  │    │MT5      │     │LLM      ││                              │
+│         │  │    │Control  │     │Analyzer ││                              │
+│         │  │    └─────────┘     └─────────┘│                              │
+│         │  └──────────────────────────────┘  │                              │
+│         └────────────────────────────────────┘                              │
+│                         │                                                    │
+│         ┌───────────────┼───────────────┐                                   │
+│         ▼               ▼               ▼                                   │
+│   ┌──────────┐   ┌──────────┐   ┌──────────┐                               │
+│   │ SetFile  │   │ Results  │   │  State   │                               │
+│   │ Gen      │   │ Parser   │   │  Store   │                               │
+│   └──────────┘   └──────────┘   └──────────┘                               │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Module Design
+
+### 1. Configuration Management (`config.py`)
+
+**Design Pattern**: Singleton with lazy loading
+
+```python
+# Dataclass-based configuration with type safety
+@dataclass
+class MT5Config:
+    terminal_path: str
+    data_path: str
+    ea_name: str
+    symbol: str
+    timeframe: str
+
+@dataclass
+class Config:
+    mt5: MT5Config
+    llm: LLMConfig
+    backtest: BacktestConfig
+    optimization: OptimizationConfig
+```
+
+**Features**:
+- Environment variable loading via `python-dotenv`
+- Auto-detection of MT5 installation paths
+- Validation on load with sensible defaults
+- Immutable after initialization
+
+### 2. Set File Generator (`set_file_generator.py`)
+
+**Responsibility**: Create MT5 `.set` parameter files
+
+```python
+class SetFileGenerator:
+    """
+    Manages EA parameter state and file generation.
+
+    Design choices:
+    - Maintains internal state dict for current parameters
+    - Provides baseline config factory method
+    - Generates MT5-compatible .set file format
+    """
+
+    def create_baseline_config(self, entry_num: int) -> None:
+        """Disable all filters for pure signal testing"""
+
+    def set_param(self, name: str, value: Any) -> None:
+        """Type-aware parameter setting"""
+
+    def generate(self, path: str) -> None:
+        """Write current state to .set file"""
+```
+
+**MT5 .set File Format**:
+```ini
+; Generated by JJC Bot Optimizer
+; Comment line
+ParameterName=value
+AnotherParam=123
+BoolParam=true
+```
+
+### 3. MT5 Controller (`mt5_controller.py`)
+
+**Responsibility**: Automate MT5 Strategy Tester execution
+
+```python
+class MT5Controller:
+    """
+    Controls MT5 via command-line interface.
+
+    Challenges solved:
+    - MT5 has no official automation API for Strategy Tester
+    - Process monitoring for completion detection
+    - Config.ini manipulation for test parameters
+    """
+
+    def run_backtest(self, set_file: str) -> Dict[str, Any]:
+        """
+        1. Write config.ini with test parameters
+        2. Launch MT5 with /config flag
+        3. Monitor for completion (process exit or results file)
+        4. Return parsed results or error
+        """
+```
+
+**Config.ini Generation**:
+```ini
+[Tester]
+Expert=JJC_Bot-V13.3
+Symbol=US30
+Period=M1
+Model=0
+FromDate=2024.01.01
+ToDate=2024.06.30
+Report=report.xml
+```
+
+### 4. Results Parser (`results_parser.py`)
+
+**Responsibility**: Extract metrics from MT5 reports
+
+```python
+@dataclass
+class BacktestResults:
+    """Structured backtest metrics"""
+    total_trades: int
+    winning_trades: int
+    losing_trades: int
+    win_rate: float
+    profit_factor: float
+    total_net_profit: float
+    max_drawdown_percent: float
+    average_win: float
+    average_loss: float
+    sharpe_ratio: Optional[float] = None
+    recovery_factor: Optional[float] = None
+
+    def to_summary(self) -> str:
+        """LLM-friendly formatted summary"""
+
+    def to_dict(self) -> Dict[str, Any]:
+        """JSON-serializable representation"""
+```
+
+**Parsing Strategy**:
+- Primary: XML report (structured, reliable)
+- Fallback: HTML report (regex extraction)
+- Handles MT5 localization variations
+
+### 5. LLM Analyzer (`llm_analyzer.py`)
+
+**Responsibility**: Intelligent parameter suggestions
+
+**Design Pattern**: Strategy pattern for provider abstraction
+
+```python
+class LLMProvider(ABC):
+    """Abstract base for LLM providers"""
+
+    @abstractmethod
+    def analyze(self, results, history, params, goal) -> OptimizationSuggestion:
+        pass
+
+class AnthropicProvider(LLMProvider):
+    """Claude API implementation"""
+
+class OpenAIProvider(LLMProvider):
+    """GPT-4 implementation"""
+
+class OllamaProvider(LLMProvider):
+    """Local model implementation"""
+```
+
+**Prompt Engineering**:
+```python
+def build_analysis_prompt(...) -> str:
+    """
+    Structured prompt optimized for:
+    - Token efficiency (key metrics only)
+    - Reliable JSON output
+    - Trading domain expertise
+    - History compression (last 5 tests)
+    """
+```
+
+**Response Format**:
+```json
+{
+    "reasoning": "Analysis explanation",
+    "parameter_changes": {"ATRStopLossMultiplier": 1.8},
+    "exploration_type": "exploit",
+    "confidence": 0.75,
+    "should_continue": true,
+    "stop_reason": null
+}
+```
+
+### 6. Optimization Loop (`optimization_loop.py`)
+
+**Responsibility**: Orchestrate the full optimization cycle
+
+**State Machine**:
+```
+INIT ──► GENERATE_SET ──► RUN_BACKTEST ──► PARSE_RESULTS ──► LLM_ANALYZE
+  │                                                               │
+  │                                                               ▼
+  │                                                         CHECK_STOP
+  │                                                          │     │
+  │                              ┌───────────────────────────┘     │
+  │                              ▼                                 │
+  │                         APPLY_CHANGES                          │
+  │                              │                                 │
+  └──────────────────────────────┘                                 │
+                                                                   ▼
+                                                              FINALIZE
+```
+
+**Stopping Criteria**:
+1. Max iterations reached (configurable, default 50)
+2. Target metrics achieved (PF > 1.5 AND DD < 5%)
+3. LLM recommends stopping (convergence detected)
+4. Stagnation (no improvement in 5 iterations)
+
+## Data Flow
+
+### Single Iteration
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Current    │────►│  SetFile    │────►│  .set file  │
+│  Params     │     │  Generator  │     │             │
+└─────────────┘     └─────────────┘     └──────┬──────┘
+                                               │
+                                               ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Updated    │◄────│    LLM      │◄────│   Parsed    │
+│  Params     │     │  Analyzer   │     │   Results   │
+└─────────────┘     └─────────────┘     └──────┬──────┘
+                                               │
+                    ┌─────────────┐            │
+                    │  Results    │◄───────────┘
+                    │  Parser     │
+                    └──────┬──────┘
+                           │
+                    ┌──────┴──────┐
+                    │  MT5        │
+                    │  Report     │
+                    └──────┬──────┘
+                           │
+                    ┌──────┴──────┐
+                    │  MT5        │
+                    │  Controller │
+                    └─────────────┘
+```
+
+### State Persistence
+
+```
+optimization_results/
+└── run_TrendEng_20240215_143022/
+    ├── optimization_state.json    # Full state (resumable)
+    │   {
+    │     "entry_type": "TrendEng",
+    │     "goal": "...",
+    │     "iterations": [...],
+    │     "best_iteration": 23
+    │   }
+    │
+    ├── optimization_summary.json  # Final results
+    │   {
+    │     "best_result": {...},
+    │     "best_params": {...},
+    │     "improvement": {...}
+    │   }
+    │
+    ├── best_params.set           # Ready-to-use config
+    ├── test_0001.set             # Each iteration's config
+    ├── test_0002.set
+    └── ...
+```
+
+## Error Handling
+
+### Graceful Degradation
+
+```python
+# MT5 failure - log and stop gracefully
+if not result["success"]:
+    logger.error(f"Backtest failed: {result['error']}")
+    self._save_state()  # Preserve progress
+    return partial_summary
+
+# LLM parsing failure - return safe default
+except (json.JSONDecodeError, ValueError) as e:
+    return OptimizationSuggestion(
+        reasoning=f"Parse failed: {e}",
+        parameter_changes={},  # No changes = safe
+        confidence=0.0,
+        should_continue=True   # Let user decide
+    )
+```
+
+### Recovery
+
+- State saved after each iteration
+- Can resume from any checkpoint
+- Partial results always available
+
+## Performance Considerations
+
+### Token Efficiency
+
+- Only key metrics sent to LLM (not individual trades)
+- History compressed to last 5 tests
+- Structured JSON responses (smaller than prose)
+- Estimated: ~1000 tokens per iteration
+
+### Backtest Speed
+
+- `MODELING_MODE=1` (1-minute OHLC) for exploration
+- `MODELING_MODE=0` (every tick) for validation
+- Configurable timeout (default 600s)
+- Parallel optimization supported (separate processes)
+
+## Security
+
+- API keys in `.env` (gitignored)
+- No secrets in code or logs
+- Trading logic excluded from repository
+- Input validation on all external data
+
+## Testing Strategy
+
+### Unit Tests (Planned)
+- Config loading with various .env states
+- Set file generation validation
+- Results parsing against known reports
+- LLM response parsing edge cases
+
+### Integration Tests (Planned)
+- Full loop with mock MT5
+- State persistence and recovery
+- Multi-iteration convergence
+
+## Future Enhancements
+
+1. **Parallel Optimization**: Multiple entries simultaneously
+2. **Walk-Forward Engine**: Automated multi-period validation
+3. **Dashboard**: Web UI for monitoring and visualization
+4. **Portfolio Mode**: Cross-entry correlation analysis
+5. **Ensemble Methods**: Combine multiple LLM suggestions
