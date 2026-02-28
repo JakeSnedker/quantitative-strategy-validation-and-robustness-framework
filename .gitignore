@@ -12,9 +12,12 @@ JJC_Bot*.mq5
 # Test results and optimization data
 backtest_results/
 optimization_results/
+entries/*/results/
+entries/*/optimization/
 *.xml
 *.htm
 *.html
+*.csv
 
 # Python
 __pycache__/

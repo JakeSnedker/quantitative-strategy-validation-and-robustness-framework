@@ -1,0 +1,49 @@
+{
+  "entry_name": "TrueShift",
+  "entry_enum": 8,
+  "magic_number": 10,
+  "status": "baseline_pending",
+
+  "baseline_params": {
+    "BOSSTESTENUMORATOR": 8,
+    "ATRStopLossMultiplier": 2.0,
+    "TakeProfitStopMultiplier": 2.0,
+    "BreakEvenMethod": 0,
+    "TrailMethod": 0,
+    "BBexpand": false,
+    "CheckRoom": false,
+    "TrendMethod": 0,
+    "Tradescore": 0
+  },
+
+  "current_best_params": null,
+
+  "optimization_targets": {
+    "min_profit_factor": 1.5,
+    "max_drawdown_percent": 5.0,
+    "min_trades": 100,
+    "target_win_rate_range": [30, 45],
+    "target_reward_risk": 2.0
+  },
+
+  "test_periods": {
+    "primary": {
+      "start": "2024.01.01",
+      "end": "2024.06.30",
+      "description": "H1 2024 - Primary optimization period"
+    },
+    "validation": {
+      "start": "2024.07.01",
+      "end": "2024.12.31",
+      "description": "H2 2024 - Walk-forward validation"
+    },
+    "out_of_sample": {
+      "start": "2023.01.01",
+      "end": "2023.12.31",
+      "description": "2023 - Out of sample test"
+    }
+  },
+
+  "last_updated": null,
+  "notes": ["Momentum-based - different characteristics from structure entries"]
+}
