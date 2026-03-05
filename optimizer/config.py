@@ -63,15 +63,17 @@ class MT5Config:
 
     @property
     def experts_path(self) -> str:
-        return os.path.join(self.data_path, "Experts")
+        return os.path.join(self.data_path, "MQL5", "Experts")
 
     @property
     def presets_path(self) -> str:
-        return os.path.join(self.data_path, "Presets")
+        # Tester presets are in MQL5/Profiles/Tester
+        return os.path.join(self.data_path, "MQL5", "Profiles", "Tester")
 
     @property
     def tester_path(self) -> str:
-        return os.path.join(self.terminal_path, "Tester")
+        # Tester folder is in data path, not terminal path
+        return os.path.join(self.data_path, "Tester")
 
     def validate(self) -> bool:
         """Validate that paths exist"""
@@ -89,7 +91,7 @@ class BacktestConfig:
     timeframe: str = "M1"
     start_date: str = "2025.08.01"
     end_date: str = "2026.02.01"
-    modeling_mode: int = 1  # 0=Every tick, 1=1min OHLC, 2=Open only
+    modeling_mode: int = 3  # 0=Every tick, 1=1min OHLC, 2=Open only, 3=Real ticks (REQUIRED for M1)
     initial_deposit: float = 10000
     timeout: int = 600  # seconds
 
@@ -161,7 +163,7 @@ class Config:
             timeframe=os.getenv("DEFAULT_TIMEFRAME", "M1"),
             start_date=os.getenv("DEFAULT_START_DATE", "2025.08.01"),
             end_date=os.getenv("DEFAULT_END_DATE", "2026.02.01"),
-            modeling_mode=int(os.getenv("MODELING_MODE", "1")),
+            modeling_mode=int(os.getenv("MODELING_MODE", "3")),  # 3=Real ticks
             initial_deposit=float(os.getenv("INITIAL_DEPOSIT", "10000")),
             timeout=int(os.getenv("BACKTEST_TIMEOUT", "600"))
         )

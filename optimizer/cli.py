@@ -5,10 +5,22 @@ JJC Bot Optimizer CLI
 Main entry point for the optimization framework.
 
 Usage:
+    python cli.py staged TrendEng --start-date 2024.07.01 --end-date 2025.12.31
+    python cli.py walk-forward TrendEng --start-date 2024.07.01 --end-date 2025.12.31
+    python cli.py mt5-optimize TrendEng -p ATRStopLossMultiplier=1.0,0.5,3.0 --forward third
     python cli.py baseline TrendEng
-    python cli.py optimize TrendEng --goal "Maximize PF, keep DD < 5%"
     python cli.py monte-carlo results.json --simulations 10000
     python cli.py test
+    python cli.py status
+
+Commands:
+    staged       - Run the full 5-stage optimization architecture (recommended)
+    walk-forward - Run simple walk-forward optimization
+    mt5-optimize - Run MT5's native optimization (genetic/sweep)
+    baseline     - Run baseline test for an entry
+    monte-carlo  - Run Monte Carlo simulation on results
+    test         - Run system tests
+    status       - Show system status and configuration
 """
 
 import argparse
@@ -112,6 +124,164 @@ def cmd_test(args):
 
     success = run_all_tests()
     return 0 if success else 1
+
+
+def cmd_mt5_optimize(args):
+    """Run MT5's built-in optimization (genetic algorithm or complete sweep)."""
+    from mt5_optimization import run_mt5_optimization
+
+    print(f"Starting MT5 optimization for {args.entry}...")
+    print(f"Mode: {'Genetic Algorithm' if args.genetic else 'Complete Sweep'}")
+    print(f"Criterion: {args.criterion}")
+    print(f"Period: {args.start_date} to {args.end_date}")
+    if args.forward != "off":
+        if args.forward == "custom":
+            print(f"Forward Testing: Custom from {args.forward_date}")
+        else:
+            print(f"Forward Testing: {args.forward} of period")
+    print()
+
+    # Build parameter ranges
+    params = {}
+
+    if args.params:
+        for param in args.params:
+            parts = param.split("=")
+            if len(parts) != 2:
+                print(f"Error: Invalid param format '{param}'. Use NAME=start,step,stop")
+                return 1
+            name = parts[0]
+            values = parts[1].split(",")
+            if len(values) != 3:
+                print(f"Error: Invalid range format '{param}'. Use NAME=start,step,stop")
+                return 1
+            try:
+                start, step, stop = float(values[0]), float(values[1]), float(values[2])
+                params[name] = (start, step, stop)
+            except ValueError:
+                print(f"Error: Non-numeric values in '{param}'")
+                return 1
+    else:
+        # Default parameters to optimize
+        params = {
+            "ATRStopLossMultiplier": (1.0, 0.5, 3.0),
+            "TakeProfitStopMultiplier": (1.5, 0.5, 4.0),
+        }
+        print("Using default optimization parameters:")
+
+    for name, (start, step, stop) in params.items():
+        print(f"  {name}: {start} to {stop} (step {step})")
+    print()
+
+    results = run_mt5_optimization(
+        entry_type=args.entry,
+        params=params,
+        start_date=args.start_date,
+        end_date=args.end_date,
+        criterion=args.criterion,
+        genetic=args.genetic,
+        timeout=args.timeout,
+        forward_mode=args.forward,
+        forward_date=args.forward_date,
+    )
+
+    if results["success"]:
+        print("\nOptimization Complete!")
+        print(f"Duration: {results['duration']:.1f} seconds")
+        print(f"Total results: {len(results['results'])}")
+
+        if results["best_result"]:
+            best = results["best_result"]
+            print(f"\nBest Result:")
+            print(f"  Profit Factor: {best.profit_factor:.2f}")
+            print(f"  Net Profit: ${best.profit:.2f}")
+            print(f"  Drawdown: {best.drawdown_percent:.2f}%")
+            print(f"  Trades: {best.trades}")
+            print(f"  Parameters:")
+            for param_name, value in best.params.items():
+                print(f"    {param_name}: {value}")
+
+        # Save results
+        if args.output:
+            import json
+            output_data = {
+                "entry": args.entry,
+                "criterion": args.criterion,
+                "duration": results["duration"],
+                "best_result": {
+                    "profit_factor": results["best_result"].profit_factor,
+                    "profit": results["best_result"].profit,
+                    "drawdown_percent": results["best_result"].drawdown_percent,
+                    "trades": results["best_result"].trades,
+                    "params": results["best_result"].params,
+                } if results["best_result"] else None,
+                "total_results": len(results["results"]),
+            }
+            with open(args.output, 'w') as f:
+                json.dump(output_data, f, indent=2)
+            print(f"\nResults saved to: {args.output}")
+    else:
+        print(f"\nOptimization failed: {results.get('error', 'Unknown error')}")
+        return 1
+
+    return 0
+
+
+def cmd_walk_forward(args):
+    """Run automated walk-forward optimization."""
+    from walk_forward_optimizer import run_walk_forward
+    from walk_forward_config import PassFailStatus
+
+    print(f"Starting Walk-Forward Optimization for {args.entry}...")
+    print(f"Period: {args.start_date} to {args.end_date}")
+    print()
+
+    report = run_walk_forward(
+        entry_type=args.entry,
+        start_date=args.start_date,
+        end_date=args.end_date,
+        output_dir=args.output,
+    )
+
+    # Return code based on status
+    if report.status == PassFailStatus.PASS:
+        return 0
+    elif report.status == PassFailStatus.MARGINAL:
+        return 0  # Still usable
+    else:
+        return 1
+
+
+def cmd_staged(args):
+    """Run staged walk-forward optimization (5-stage architecture)."""
+    from staged_optimizer import run_staged_optimization
+    from walk_forward_config import PassFailStatus
+
+    print(f"Starting Staged Optimization for {args.entry}...")
+    print(f"Period: {args.start_date} to {args.end_date}")
+    print()
+    print("This will run through all 5 stages:")
+    print("  Stage 1: Foundation (SL/TP structure)")
+    print("  Stage 2: Entry Refinement (filters vs baseline)")
+    print("  Stage 3: Time & Context (vs winning system)")
+    print("  Stage 4: Trade Management (BreakEven/Trail methods)")
+    print("  Stage 5: Exits & Risk (final adjustments)")
+    print()
+
+    report = run_staged_optimization(
+        entry_type=args.entry,
+        start_date=args.start_date,
+        end_date=args.end_date,
+        output_dir=args.output,
+    )
+
+    # Return code based on status
+    if report.final_status == PassFailStatus.PASS:
+        return 0
+    elif report.final_status == PassFailStatus.MARGINAL:
+        return 0  # Still usable
+    else:
+        return 1
 
 
 def cmd_generate_set(args):
@@ -224,6 +394,42 @@ def main():
     # Test command
     test_parser = subparsers.add_parser("test", help="Run system tests")
     test_parser.set_defaults(func=cmd_test)
+
+    # MT5 Optimization command (native genetic algorithm)
+    mt5opt_parser = subparsers.add_parser("mt5-optimize", help="Run MT5 native optimization (genetic/sweep)")
+    mt5opt_parser.add_argument("entry", choices=["TrendEng", "TrendEngWick", "TrendingGray", "TrueShift", "TDIBnR"])
+    mt5opt_parser.add_argument("-p", "--params", nargs="*", help="Parameters to optimize (NAME=start,step,stop)")
+    mt5opt_parser.add_argument("--start-date", default="2025.01.01", help="Backtest start date (YYYY.MM.DD)")
+    mt5opt_parser.add_argument("--end-date", default="2025.06.30", help="Backtest end date (YYYY.MM.DD)")
+    mt5opt_parser.add_argument("-c", "--criterion", default="profit_factor",
+                               choices=["balance", "profit_factor", "expected_payoff", "drawdown", "recovery_factor", "sharpe"],
+                               help="Optimization criterion")
+    mt5opt_parser.add_argument("--sweep", dest="genetic", action="store_false", default=True,
+                               help="Use complete sweep instead of genetic algorithm")
+    mt5opt_parser.add_argument("-f", "--forward", default="off",
+                               choices=["off", "half", "third", "quarter", "custom"],
+                               help="Forward testing mode: off (default), half (1/2), third (1/3), quarter (1/4), or custom")
+    mt5opt_parser.add_argument("--forward-date", default=None,
+                               help="Custom forward test start date (YYYY.MM.DD) - required if --forward=custom")
+    mt5opt_parser.add_argument("-t", "--timeout", type=int, default=3600, help="Max time in seconds (default 3600)")
+    mt5opt_parser.add_argument("-o", "--output", help="Save results to JSON file")
+    mt5opt_parser.set_defaults(func=cmd_mt5_optimize)
+
+    # Walk-Forward Optimization command
+    wf_parser = subparsers.add_parser("walk-forward", help="Run automated walk-forward optimization")
+    wf_parser.add_argument("entry", choices=["TrendEng", "TrendEngWick", "TrendingGray", "TrueShift", "TDIBnR"])
+    wf_parser.add_argument("--start-date", default="2024.07.01", help="Data start date (YYYY.MM.DD)")
+    wf_parser.add_argument("--end-date", default="2025.12.31", help="Data end date (YYYY.MM.DD)")
+    wf_parser.add_argument("-o", "--output", default="results", help="Output directory for reports")
+    wf_parser.set_defaults(func=cmd_walk_forward)
+
+    # Staged Optimization command (5-stage architecture)
+    staged_parser = subparsers.add_parser("staged", help="Run 5-stage walk-forward optimization")
+    staged_parser.add_argument("entry", choices=["TrendEng", "TrendEngWick", "TrendingGray", "TrueShift", "TDIBnR"])
+    staged_parser.add_argument("--start-date", default="2024.07.01", help="Data start date (YYYY.MM.DD)")
+    staged_parser.add_argument("--end-date", default="2025.12.31", help="Data end date (YYYY.MM.DD)")
+    staged_parser.add_argument("-o", "--output", default="results", help="Output directory for reports")
+    staged_parser.set_defaults(func=cmd_staged)
 
     # Status command
     status_parser = subparsers.add_parser("status", help="Show system status")
