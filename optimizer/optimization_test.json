@@ -1,0 +1,16 @@
+{
+  "entry": "TrendEng",
+  "criterion": "profit_factor",
+  "duration": 10.005534648895264,
+  "best_result": {
+    "profit_factor": 1.138883,
+    "profit": 257.62,
+    "drawdown_percent": 7.9412,
+    "trades": 35,
+    "params": {
+      "ATRStopLossMultiplier": 2.5,
+      "TakeProfitStopMultiplier": 4.0
+    }
+  },
+  "total_results": 30
+}
