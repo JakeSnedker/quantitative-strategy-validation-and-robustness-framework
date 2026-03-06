@@ -22,19 +22,19 @@ from config import get_config
 
 
 class OptimizationMode(IntEnum):
-    """MT5 Optimization modes"""
-    DISABLED = 0      # Single backtest
-    COMPLETE = 1      # Slow complete algorithm (use when combos < 1200)
-    GENETIC = 2       # Fast genetic algorithm (use when combos > 1200)
+    """MT5 Optimization modes (values match MT5 terminal.ini)"""
+    COMPLETE = 0      # Slow complete algorithm (use when combos < 1200)
+    GENETIC = 1       # Fast genetic algorithm (use when combos > 1200)
+    DISABLED = 2      # Single backtest (no optimization)
 
 
 class TicksMode(IntEnum):
-    """MT5 Modeling modes"""
+    """MT5 Modeling modes (values match MT5 terminal.ini)"""
     EVERY_TICK = 0              # Every tick (synthetic)
-    REAL_TICKS = 1              # Every tick based on real ticks (BEST)
-    OHLC_1MIN = 2               # 1 minute OHLC
-    OPEN_PRICE = 3              # Open price only
-    MATH_CALCULATION = 4        # Math calculation
+    OHLC_1MIN = 1               # 1 minute OHLC
+    OPEN_PRICE = 2              # Open price only
+    MATH_CALCULATION = 3        # Math calculation
+    REAL_TICKS = 4              # Every tick based on real ticks (BEST)
 
 
 class ForwardMode(IntEnum):
@@ -62,6 +62,7 @@ class TesterSettings:
     """Strategy Tester settings for terminal.ini"""
     # EA and Symbol
     expert: str = "Experts\\JJC_Bot-V13.3  (OTN Added).ex5"
+    expert_parameters: str = ""  # Path to .set file (relative to MQL5/Profiles/Tester/)
     symbol: str = "US30.cash"
     period: int = 1  # M1
 
@@ -74,7 +75,7 @@ class TesterSettings:
     deposit: float = 10000.0
     leverage: int = 50
     currency: str = "USD"
-    delay: int = 29  # High random delay
+    execution_delay: int = 50  # Delay in ms (Execution field in terminal.ini)
 
     # Optimization settings
     opt_mode: OptimizationMode = OptimizationMode.COMPLETE
@@ -231,13 +232,17 @@ class TerminalConfigManager:
             'Deposit': f"{settings.deposit:.2f}",
             'Leverage': str(settings.leverage),
             'Currency': settings.currency,
-            'LastDelay': str(settings.delay),
+            'Execution': str(settings.execution_delay),
             'OptMode': str(settings.opt_mode.value),
             'OptCrit': str(settings.opt_criterion.value),
             'OptForward': str(settings.opt_forward.value),
             'Visualization': str(settings.visualization),
             'DateRange': '3',  # Custom range
         }
+
+        # Add ExpertParameters (path to .set file) if specified
+        if settings.expert_parameters:
+            replacements['ExpertParameters'] = settings.expert_parameters
 
         if settings.opt_forward == ForwardMode.CUSTOM and settings.opt_forward_date > 0:
             replacements['OptFwdDate'] = str(settings.opt_forward_date)
