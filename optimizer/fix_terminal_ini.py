@@ -14,8 +14,8 @@ except:
 with open(manager.terminal_ini_path, 'r', encoding='utf-16') as f:
     content = f.read()
 
-# Build the path properly
-set_path = "MQL5\\Profiles\\Tester\\test_optimization.set"
+# Build the path properly - use UTF-16 template-based .set file
+set_path = "MQL5\\Profiles\\Tester\\test_from_template.set"
 
 # Process line by line
 lines = content.split('\n')

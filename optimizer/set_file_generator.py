@@ -1,9 +1,15 @@
 """
 .set file generator for MT5 Expert Advisors.
 Creates and modifies MT5 preset files for backtesting.
+
+IMPORTANT: MT5 .set files MUST be:
+1. UTF-16 encoded (not ASCII/UTF-8)
+2. Named exactly like the EA for auto-loading
+3. Made read-only to prevent MT5 overwriting on close
 """
 
 import os
+import re
 from datetime import datetime
 from typing import Dict, Any, Optional
 from pathlib import Path
@@ -259,17 +265,108 @@ class SetFileGenerator:
         else:
             return str(value)
 
-    def generate(self, output_path: str, comment: str = "") -> str:
+    def generate(
+        self,
+        output_path: str,
+        comment: str = "",
+        make_readonly: bool = True,
+        archive_copy: bool = False,
+    ) -> str:
         """
-        Generate a .set file with current parameters.
+        Generate a .set file with current parameters using UTF-16 template.
+
+        Uses the baseline.set template and modifies values in-place to ensure
+        MT5 can read the file correctly.
 
         Args:
             output_path: Path to save the .set file
             comment: Optional comment to include in file header
+            make_readonly: Make file read-only to prevent MT5 overwriting
+            archive_copy: Also save an archive copy with timestamp
 
         Returns:
             Path to the generated file
         """
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Find template file
+        template_path = Path(__file__).parent / "templates" / "baseline.set"
+
+        if template_path.exists():
+            # Use template-based generation (UTF-16)
+            return self._generate_from_template(
+                output_path, template_path, make_readonly, archive_copy
+            )
+        else:
+            # Fallback to legacy generation
+            return self._generate_legacy(output_path, comment)
+
+    def _generate_from_template(
+        self,
+        output_path: Path,
+        template_path: Path,
+        make_readonly: bool,
+        archive_copy: bool,
+    ) -> str:
+        """Generate .set file from UTF-16 template."""
+        # Read template with UTF-16 encoding
+        with open(template_path, 'r', encoding='utf-16') as f:
+            content = f.read()
+
+        # Apply all parameter modifications
+        for name, value in self.params.items():
+            formatted_value = self._format_value(name, value)
+            # Match: ParamName=anything_until_newline
+            # Replace with: ParamName=formatted_value (preserving optimization range format)
+            pattern = rf'^({re.escape(name)}=)[^\n]*'
+            # For simple values, we need to preserve the optimization format
+            # Read existing line to get the format
+            match = re.search(pattern, content, flags=re.MULTILINE)
+            if match:
+                existing_line = match.group(0)
+                # Check if it has optimization range format (contains ||)
+                if '||' in existing_line:
+                    # Parse existing range: value||start||step||stop||Y/N
+                    parts = existing_line.split('=', 1)[1].split('||')
+                    if len(parts) >= 5:
+                        # Update value but keep range and optimization flag
+                        new_line = f"{name}={formatted_value}||{parts[1]}||{parts[2]}||{parts[3]}||{parts[4]}"
+                        content = re.sub(pattern, new_line, content, flags=re.MULTILINE)
+                    else:
+                        # Malformed, just replace value
+                        replacement = rf'\g<1>{formatted_value}'
+                        content = re.sub(pattern, replacement, content, flags=re.MULTILINE)
+                else:
+                    # No optimization range, simple replacement
+                    replacement = rf'\g<1>{formatted_value}'
+                    content = re.sub(pattern, replacement, content, flags=re.MULTILINE)
+
+        # Make writable first (in case read-only from previous run)
+        if output_path.exists():
+            os.chmod(output_path, 0o644)
+
+        # Write with UTF-16 encoding
+        with open(output_path, 'w', encoding='utf-16') as f:
+            f.write(content)
+
+        # Make read-only to prevent MT5 overwriting
+        if make_readonly:
+            os.chmod(output_path, 0o444)
+
+        # Save archive copy if requested
+        if archive_copy:
+            archive_dir = output_path.parent / "archive"
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            archive_path = archive_dir / f"{output_path.stem}_{timestamp}.set"
+            with open(archive_path, 'w', encoding='utf-16') as f:
+                f.write(content)
+
+        return str(output_path)
+
+    def _generate_legacy(self, output_path: Path, comment: str) -> str:
+        """Legacy .set generation (UTF-16, no template)."""
         lines = []
 
         # Header
@@ -280,16 +377,14 @@ class SetFileGenerator:
             lines.append(f"; {comment}")
             lines.append(";")
 
-        # Parameters
+        # Parameters with optimization format
         for name, value in sorted(self.params.items()):
             formatted_value = self._format_value(name, value)
-            lines.append(f"{name}={formatted_value}")
+            # Use optimization format: value||value||0||value||N (no optimization)
+            lines.append(f"{name}={formatted_value}||{formatted_value}||0||{formatted_value}||N")
 
-        # Write file
-        output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(output_path, 'w', encoding='utf-8') as f:
+        # Write with UTF-16 encoding for MT5 compatibility
+        with open(output_path, 'w', encoding='utf-16') as f:
             f.write('\n'.join(lines))
 
         return str(output_path)
@@ -297,6 +392,8 @@ class SetFileGenerator:
     def load_from_file(self, filepath: str) -> Dict[str, Any]:
         """
         Load parameters from an existing .set file.
+
+        Handles both UTF-16 (MT5 native) and UTF-8 encoded files.
 
         Args:
             filepath: Path to the .set file
@@ -306,8 +403,15 @@ class SetFileGenerator:
         """
         loaded_params = {}
 
-        with open(filepath, 'r', encoding='utf-8') as f:
-            for line in f:
+        # Try UTF-16 first (MT5's native format), fall back to UTF-8
+        try:
+            with open(filepath, 'r', encoding='utf-16') as f:
+                content = f.read()
+        except (UnicodeDecodeError, UnicodeError):
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+        for line in content.split('\n'):
                 line = line.strip()
 
                 # Skip comments and empty lines
@@ -415,6 +519,9 @@ ENTRY_TYPES = {
     "TrueShift": 8,
     "TDIBnR": 9,
 }
+
+# EA .set filename - MT5 auto-loads a .set file matching the EA name
+EA_SET_FILENAME = "JJC_Bot-V13.3  (OTN Added).set"
 
 
 def create_test_set_file(

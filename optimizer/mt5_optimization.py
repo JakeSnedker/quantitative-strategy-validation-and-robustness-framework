@@ -13,8 +13,10 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field
 
+import re
+
 from config import get_config, MT5Config, BacktestConfig
-from set_file_generator import SetFileGenerator, ENTRY_TYPES
+from set_file_generator import SetFileGenerator, ENTRY_TYPES, EA_SET_FILENAME
 from terminal_config import (
     TerminalConfigManager,
     TesterSettings,
@@ -305,8 +307,14 @@ UseCloud=0
             self.terminal_config.write_tester_settings(settings, make_readonly=True)
 
             # Write .set file with input parameters (including base params if set)
-            set_file_name = f"optimizer_{datetime.now().strftime('%Y%m%d_%H%M%S')}.set"
-            set_file_path = self._write_set_file(all_params, set_file_name, self.base_params)
+            # MUST use EA-named .set file for MT5 to auto-load it
+            # Generate archive name from entry type and optimized params
+            opt_param_names = [p.name for p in params if p.optimize]
+            archive_name = f"{entry_type}_{'_'.join(opt_param_names[:3])}"  # First 3 param names
+
+            set_file_path = self._write_set_file(
+                all_params, EA_SET_FILENAME, self.base_params, archive_name=archive_name
+            )
 
             print(f"Optimizing {entry_type} with {len(params)} parameters ({param_combinations} combinations)")
             print(f"Mode: {settings.opt_mode.name}")
@@ -377,27 +385,110 @@ UseCloud=0
         params: List[OptimizationParam],
         filename: str,
         base_params: Optional[Dict[str, Any]] = None,
+        archive_name: Optional[str] = None,
     ) -> Path:
         """
         Write a .set file with input parameters for MT5 Strategy Tester.
 
+        Uses the baseline.set template (UTF-16 encoded) and modifies values
+        in-place to ensure MT5 can read the file correctly.
+
+        Two files are created:
+        1. EA-named file (filename) - what MT5 loads, made read-only
+        2. Archive file (archive_name) - for history/debugging
+
         The .set file format is:
-            ParamName=value                           (fixed value)
-            ParamName=value||start||step||stop||Y/N   (optimization range)
+            ParamName=value||start||step||stop||Y/N
 
         Where Y/N indicates if the parameter should be optimized.
 
         Args:
             params: List of OptimizationParam objects (to be optimized)
-            filename: Name for the .set file
+            filename: Name for the .set file (should be EA name for auto-load)
             base_params: Optional dict of fixed parameters from previous stages
+            archive_name: Optional descriptive name for archive copy
 
         Returns:
-            Path to the created .set file
+            Path to the created .set file (EA-named working file)
         """
         # Ensure the Tester profiles directory exists
         self.set_file_path.mkdir(parents=True, exist_ok=True)
+        set_path = self.set_file_path / filename
 
+        # Find template file
+        template_path = Path(__file__).parent / "templates" / "baseline.set"
+        if not template_path.exists():
+            # Fallback to generating from scratch if no template
+            return self._write_set_file_legacy(params, filename, base_params)
+
+        # Read template with UTF-16 encoding (MT5's format)
+        with open(template_path, 'r', encoding='utf-16') as f:
+            content = f.read()
+
+        # Build modifications dict
+        modifications = {}
+
+        # Add base params (fixed values from previous stages)
+        if base_params:
+            for name, value in base_params.items():
+                if isinstance(value, bool):
+                    formatted = "true" if value else "false"
+                elif isinstance(value, float) and value == int(value):
+                    formatted = str(int(value))
+                else:
+                    formatted = str(value)
+                modifications[name] = formatted
+
+        # Add optimization params (with ranges)
+        for param in params:
+            modifications[param.name] = param.to_ini_string()
+
+        # Apply modifications to content
+        for param_name, new_value in modifications.items():
+            # Match: ParamName=anything_until_newline
+            # Replace with: ParamName=new_value
+            pattern = rf'^({re.escape(param_name)}=).*$'
+            replacement = rf'\g<1>{new_value}'
+            content = re.sub(pattern, replacement, content, flags=re.MULTILINE)
+
+        # Make writable first (in case it was read-only from previous run)
+        if set_path.exists():
+            os.chmod(set_path, 0o644)
+
+        # Write with UTF-16 encoding (MT5's expected format)
+        with open(set_path, 'w', encoding='utf-16') as f:
+            f.write(content)
+
+        # Make read-only to prevent MT5 from overwriting on close
+        os.chmod(set_path, 0o444)
+
+        print(f"Created .set file: {set_path}")
+        print(f"  Read-only: Yes (prevents MT5 overwrite)")
+        if base_params:
+            print(f"  Fixed params: {len(base_params)}")
+        print(f"  Optimization params: {len(params)}")
+
+        # Save archive copy with descriptive name
+        if archive_name:
+            archive_dir = self.set_file_path / "archive"
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            archive_path = archive_dir / f"{archive_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.set"
+            with open(archive_path, 'w', encoding='utf-16') as f:
+                f.write(content)
+            print(f"  Archive: {archive_path.name}")
+
+        return set_path
+
+    def _write_set_file_legacy(
+        self,
+        params: List[OptimizationParam],
+        filename: str,
+        base_params: Optional[Dict[str, Any]] = None,
+    ) -> Path:
+        """
+        Legacy method: Write a .set file from scratch (no template).
+        Used as fallback if baseline.set template doesn't exist.
+        """
         set_path = self.set_file_path / filename
 
         lines = ["; MT5 Strategy Tester Input Parameters",
@@ -421,7 +512,7 @@ UseCloud=0
                     formatted = str(int(value))
                 else:
                     formatted = str(value)
-                lines.append(f"{name}={formatted}")
+                lines.append(f"{name}={formatted}||{formatted}||0||{formatted}||N")
             lines.append("")
 
         # Then write optimization params with ranges
@@ -429,14 +520,11 @@ UseCloud=0
         for param in params:
             lines.append(f"{param.name}={param.to_ini_string()}")
 
-        # Write with ASCII encoding (MT5 expects plain text)
-        with open(set_path, 'w', encoding='ascii') as f:
+        # Write with UTF-16 encoding for MT5 compatibility
+        with open(set_path, 'w', encoding='utf-16') as f:
             f.write('\n'.join(lines))
 
-        print(f"Created .set file: {set_path}")
-        if base_params:
-            print(f"  Fixed params: {len(base_params) - len(optimizing_names)}")
-        print(f"  Optimization params: {len(params)}")
+        print(f"Created .set file (legacy): {set_path}")
         return set_path
 
     def _find_optimization_report(self) -> Optional[str]:
