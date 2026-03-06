@@ -160,16 +160,25 @@ class WalkForwardOptimizer:
     Automated walk-forward optimization engine.
     """
 
-    def __init__(self, config: WalkForwardConfig):
+    def __init__(self, config: WalkForwardConfig, base_params: Optional[Dict[str, Any]] = None):
         """
         Initialize the optimizer.
 
         Args:
             config: WalkForwardConfig with all settings
+            base_params: Optional fixed parameters from previous stages (for staged optimization)
         """
         self.config = config
         self.mt5_runner = MT5OptimizationRunner()
         self.report = WalkForwardReport(entry_type=config.entry_type)
+
+        # Set base params for MT5 runner (used in staged optimization)
+        self.base_params = base_params
+        if base_params:
+            self.mt5_runner.base_params = base_params
+
+        # Optional .set file path override
+        self.set_file_path: Optional[Path] = None
 
     def run(self) -> WalkForwardReport:
         """

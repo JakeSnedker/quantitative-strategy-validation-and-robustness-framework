@@ -53,6 +53,8 @@ from walk_forward_optimizer import (
     WalkForwardReport,
     WindowResult,
 )
+from set_file_generator import SetFileGenerator, ENTRY_TYPES as SET_ENTRY_TYPES
+from config import get_config
 
 
 class StageGateResult(Enum):
@@ -268,6 +270,88 @@ class StagedOptimizer:
         # Baseline PF (established in Stage 1)
         self.baseline_pf: float = 0.0
 
+        # .set file management
+        self.set_generator = SetFileGenerator()
+        self._setup_set_file_paths()
+
+    def _setup_set_file_paths(self):
+        """Setup paths for .set file generation"""
+        config = get_config()
+        self.set_file_dir = Path(config.mt5.data_path) / "MQL5" / "Profiles" / "Tester"
+        self.set_file_dir.mkdir(parents=True, exist_ok=True)
+
+        # Current .set file path (updated after each stage)
+        self.current_set_file = self.set_file_dir / f"staged_{self.entry_type}_current.set"
+
+        # Stage-specific .set files for history/debugging
+        self.stage_set_files: Dict[str, Path] = {}
+
+    def _write_stage_set_file(self, stage: Stage) -> Path:
+        """
+        Write .set file with current winning parameters after a stage completes.
+
+        Args:
+            stage: The stage that just completed
+
+        Returns:
+            Path to the generated .set file
+        """
+        # Update generator with current params
+        self.set_generator.update_params(self.current_params)
+
+        # Write stage-specific .set file (for history)
+        stage_filename = f"staged_{self.entry_type}_stage{stage.value}_{stage.name.lower()}.set"
+        stage_set_path = self.set_file_dir / stage_filename
+
+        self.set_generator.generate(
+            str(stage_set_path),
+            comment=f"Stage {stage.value} ({stage.name}) winning parameters for {self.entry_type}"
+        )
+        self.stage_set_files[stage.name] = stage_set_path
+
+        # Also update the "current" .set file (used by next stage)
+        self.set_generator.generate(
+            str(self.current_set_file),
+            comment=f"Current winning parameters after Stage {stage.value} for {self.entry_type}"
+        )
+
+        print(f"\n[SET FILE] Written: {stage_set_path.name}")
+        print(f"[SET FILE] Current: {self.current_set_file.name}")
+
+        return stage_set_path
+
+    def _write_final_set_file(self) -> Path:
+        """
+        Write the final .set file with all winning parameters.
+
+        Returns:
+            Path to the final .set file
+        """
+        # Update generator with final params
+        self.set_generator.update_params(self.current_params)
+
+        # Write final .set file
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        final_filename = f"staged_{self.entry_type}_FINAL_{timestamp}.set"
+        final_set_path = self.set_file_dir / final_filename
+
+        self.set_generator.generate(
+            str(final_set_path),
+            comment=f"FINAL optimized parameters for {self.entry_type} - {self.report.final_status.value}"
+        )
+
+        # Also copy to a predictable "latest" filename
+        latest_set_path = self.set_file_dir / f"staged_{self.entry_type}_LATEST.set"
+        self.set_generator.generate(
+            str(latest_set_path),
+            comment=f"LATEST optimized parameters for {self.entry_type}"
+        )
+
+        print(f"\n[SET FILE] FINAL: {final_set_path.name}")
+        print(f"[SET FILE] LATEST: {latest_set_path.name}")
+
+        return final_set_path
+
     def run(self) -> StagedOptimizationReport:
         """
         Execute the full staged optimization.
@@ -308,10 +392,16 @@ class StagedOptimizer:
                 self.report.stopped_at_stage = stage
                 self.report.stop_reason = f"Gate failed at Stage {stage.value}: {stage.name}"
                 print(f"\n[GATE FAILED] Stopping at Stage {stage.value}")
+                # Still write .set file with whatever we have
+                self._write_stage_set_file(stage)
                 break
 
             # Update cumulative params
             self.current_params.update(stage_result.cumulative_params)
+
+            # Write .set file with winning params from this stage
+            self._write_stage_set_file(stage)
+
             print(f"\n[GATE PASSED] Proceeding to next stage")
 
         # Finalize report
@@ -333,6 +423,13 @@ class StagedOptimizer:
                     self.report.final_status = PassFailStatus.FAIL
         else:
             self.report.final_status = PassFailStatus.FAIL
+
+        # Write FINAL .set file with all winning parameters
+        final_set_path = self._write_final_set_file()
+        print(f"\n{'='*70}")
+        print(f"FINAL .SET FILE READY FOR USE:")
+        print(f"  {final_set_path}")
+        print(f"{'='*70}")
 
         # Save report
         self._save_report()
@@ -875,6 +972,11 @@ class StagedOptimizer:
     ) -> Optional[WalkForwardReport]:
         """Run walk-forward optimization for given parameters"""
         try:
+            # Generate .set file with:
+            # 1. All base_params as FIXED values
+            # 2. opt_params with optimization ranges
+            set_file_path = self._generate_phase_set_file(phase_name, base_params, opt_params)
+
             # Create config
             config = WalkForwardConfig(
                 entry_type=self.entry_type,
@@ -895,12 +997,11 @@ class StagedOptimizer:
                 print(f"    Config errors: {errors}")
                 return None
 
-            # Run optimizer
-            optimizer = WalkForwardOptimizer(config)
+            # Run optimizer with base_params from previous stages
+            optimizer = WalkForwardOptimizer(config, base_params=base_params)
 
-            # Inject base params
-            # Note: This would require modifying WalkForwardOptimizer to accept base_params
-            # For now, we'll use the existing implementation
+            # Set the .set file path for MT5 to use
+            optimizer.set_file_path = set_file_path
 
             report = optimizer.run()
 
@@ -913,7 +1014,49 @@ class StagedOptimizer:
 
         except Exception as e:
             print(f"    Walk-forward error: {e}")
+            import traceback
+            traceback.print_exc()
             return None
+
+    def _generate_phase_set_file(
+        self,
+        phase_name: str,
+        base_params: Dict[str, Any],
+        opt_params: List[OptimizationParameter],
+    ) -> Path:
+        """
+        Generate a .set file for a specific phase with:
+        - Base params as FIXED values
+        - Optimization params with ranges
+
+        Args:
+            phase_name: Name of the phase (for filename)
+            base_params: Fixed parameters from previous stages
+            opt_params: Parameters to optimize in this phase
+
+        Returns:
+            Path to the generated .set file
+        """
+        # Start with default params
+        generator = SetFileGenerator()
+
+        # Apply all base/fixed params
+        generator.update_params(base_params)
+
+        # Generate filename
+        set_filename = f"staged_{self.entry_type}_{phase_name}.set"
+        set_path = self.set_file_dir / set_filename
+
+        # Write the .set file
+        # Note: The optimization ranges will be written by mt5_optimization
+        # Here we just set the base values
+        generator.generate(
+            str(set_path),
+            comment=f"Phase: {phase_name} - Base params with {len(opt_params)} params to optimize"
+        )
+
+        print(f"    [SET FILE] Phase config: {set_filename}")
+        return set_path
 
     def _test_params_quick(self, params: Dict[str, Any]) -> float:
         """

@@ -317,39 +317,51 @@ class HTMLResultsParser:
         results.report_path = filepath
         results.parsed_at = datetime.now().isoformat()
 
-        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
-            content = f.read()
+        # MT5 reports can be UTF-16 or UTF-8, try both
+        try:
+            with open(filepath, 'r', encoding='utf-16') as f:
+                content = f.read()
+        except (UnicodeError, UnicodeDecodeError):
+            with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
 
-        # Extract metrics using regex patterns
+        # Extract metrics using regex patterns - MT5 format: Label:</td><td><b>value</b></td>
         patterns = {
-            "total_net_profit": r"Total Net Profit[:\s]*</td><td[^>]*>([^<]+)",
-            "gross_profit": r"Gross Profit[:\s]*</td><td[^>]*>([^<]+)",
-            "gross_loss": r"Gross Loss[:\s]*</td><td[^>]*>([^<]+)",
-            "profit_factor": r"Profit Factor[:\s]*</td><td[^>]*>([^<]+)",
-            "expected_payoff": r"Expected Payoff[:\s]*</td><td[^>]*>([^<]+)",
-            "max_drawdown": r"Maximal Drawdown[:\s]*</td><td[^>]*>([^<]+)",
-            "total_trades": r"Total Trades[:\s]*</td><td[^>]*>([^<]+)",
-            "winning_trades": r"Short Trades[^<]*</td><td[^>]*>\d+[^<]*</td><td[^>]*>(\d+)",
-            "sharpe_ratio": r"Sharpe Ratio[:\s]*</td><td[^>]*>([^<]+)",
-            "recovery_factor": r"Recovery Factor[:\s]*</td><td[^>]*>([^<]+)",
+            "total_net_profit": r"Total Net Profit:</td>\s*<td[^>]*><b>([^<]+)</b>",
+            "gross_profit": r"Gross Profit:</td>\s*<td[^>]*><b>([^<]+)</b>",
+            "gross_loss": r"Gross Loss:</td>\s*<td[^>]*><b>([^<]+)</b>",
+            "profit_factor": r"Profit Factor:</td>\s*<td[^>]*><b>([^<]+)</b>",
+            "expected_payoff": r"Expected Payoff:</td>\s*<td[^>]*><b>([^<]+)</b>",
+            "max_drawdown": r"Balance Drawdown Maximal:</td>\s*<td[^>]*><b>([^<]+)</b>",
+            "max_drawdown_percent": r"Equity Drawdown Maximal:</td>\s*<td[^>]*><b>[^<]*\(([^)]+)%\)</b>",
+            "total_trades": r"Total Trades:</td>\s*<td[^>]*><b>(\d+)</b>",
+            "sharpe_ratio": r"Sharpe Ratio:</td>\s*<td[^>]*><b>([^<]+)</b>",
+            "recovery_factor": r"Recovery Factor:</td>\s*<td[^>]*><b>([^<]+)</b>",
+            "winning_trades": r"Profit Trades[^:]*:</td>\s*<td[^>]*><b>(\d+)",
+            "losing_trades": r"Loss Trades[^:]*:</td>\s*<td[^>]*><b>(\d+)",
         }
 
         for attr, pattern in patterns.items():
-            match = re.search(pattern, content, re.IGNORECASE)
+            match = re.search(pattern, content, re.IGNORECASE | re.DOTALL)
             if match:
                 value_str = match.group(1).strip()
+                # Remove non-numeric chars except decimal and minus
                 value_str = re.sub(r'[^\d.\-]', '', value_str)
                 try:
                     if attr in ["total_trades", "winning_trades", "losing_trades"]:
-                        setattr(results, attr, int(value_str))
+                        setattr(results, attr, int(float(value_str)))
                     else:
                         setattr(results, attr, float(value_str))
-                except ValueError:
+                except (ValueError, TypeError):
                     pass
 
         # Calculate win rate
-        if results.total_trades > 0:
+        if results.total_trades > 0 and results.winning_trades > 0:
             results.win_rate = (results.winning_trades / results.total_trades) * 100
+
+        # Calculate losing trades if not found
+        if results.losing_trades == 0 and results.total_trades > 0 and results.winning_trades > 0:
+            results.losing_trades = results.total_trades - results.winning_trades
 
         return results
 

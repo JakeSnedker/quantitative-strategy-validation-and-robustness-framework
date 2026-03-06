@@ -15,6 +15,14 @@ from dataclasses import dataclass, field
 
 from config import get_config, MT5Config, BacktestConfig
 from set_file_generator import SetFileGenerator, ENTRY_TYPES
+from terminal_config import (
+    TerminalConfigManager,
+    TesterSettings,
+    OptimizationMode,
+    ForwardMode,
+    TicksMode,
+    OptimizationCriterion,
+)
 
 
 @dataclass
@@ -82,6 +90,11 @@ class MT5OptimizationRunner:
         self.config = mt5_config
         self.data_path = Path(self.config.data_path)
         self.tester_path = Path(self.config.tester_path)
+        self.terminal_config = TerminalConfigManager(self.config.data_path)
+        self.set_file_path = self.data_path / "MQL5" / "Profiles" / "Tester"
+
+        # Base params from previous stages (for staged optimization)
+        self.base_params: Optional[Dict[str, Any]] = None
 
     def create_optimization_config(
         self,
@@ -248,26 +261,56 @@ UseCloud=0
             )
             all_params = [entry_param] + params
 
-            # Create config
-            config_path = self.create_optimization_config(
-                ea_name=self.config.ea_name,
-                symbol=backtest_config.symbol,
-                timeframe=backtest_config.timeframe,
-                start_date=start_date,
-                end_date=end_date,
-                params=all_params,
-                optimization_mode=optimization_mode,
-                criterion=criterion,
-                deposit=backtest_config.initial_deposit,
-                model=backtest_config.modeling_mode,
-                forward_mode=forward_mode,
-                forward_date=forward_date,
-            )
+            # Calculate parameter combinations for OptMode selection
+            param_combinations = 1
+            for p in params:
+                if p.optimize and p.step > 0:
+                    steps = int((p.stop - p.start) / p.step) + 1
+                    param_combinations *= steps
 
-            print(f"Created optimization config: {config_path}")
-            print(f"Optimizing {entry_type} with {len(params)} parameters")
-            print(f"Mode: {'Genetic Algorithm' if optimization_mode == 2 else 'Complete Sweep'}")
-            print(f"Criterion: {criterion}")
+            # Map forward mode string to ForwardMode enum
+            forward_mode_map = {
+                "off": ForwardMode.OFF,
+                "half": ForwardMode.HALF,
+                "third": ForwardMode.THIRD,
+                "quarter": ForwardMode.QUARTER,
+                "custom": ForwardMode.CUSTOM,
+            }
+            fwd_mode = forward_mode_map.get(forward_mode, ForwardMode.THIRD)
+
+            # Create terminal.ini settings
+            settings = TesterSettings()
+            settings.symbol = backtest_config.symbol
+            if not settings.symbol.endswith('.cash') and settings.symbol in ['US30', 'NAS100', 'US500']:
+                settings.symbol = f"{settings.symbol}.cash"
+            settings.date_from = TesterSettings._date_to_timestamp(start_date)
+            settings.date_to = TesterSettings._date_to_timestamp(end_date)
+            settings.ticks_mode = TicksMode.REAL_TICKS
+            settings.deposit = backtest_config.initial_deposit
+            settings.opt_criterion = OptimizationCriterion.PROFIT_FACTOR
+            settings.opt_forward = fwd_mode
+            settings.visualization = 0  # Headless for automation
+
+            # Set optimization mode based on param count
+            if param_combinations <= 1200:
+                settings.opt_mode = OptimizationMode.COMPLETE
+            else:
+                settings.opt_mode = OptimizationMode.GENETIC
+
+            # Handle custom forward date
+            if forward_mode == "custom" and forward_date:
+                settings.opt_forward_date = TesterSettings._date_to_timestamp(forward_date)
+
+            # Write terminal.ini (makes it read-only to prevent MT5 overwriting)
+            self.terminal_config.write_tester_settings(settings, make_readonly=True)
+
+            # Write .set file with input parameters (including base params if set)
+            set_file_name = f"optimizer_{datetime.now().strftime('%Y%m%d_%H%M%S')}.set"
+            set_file_path = self._write_set_file(all_params, set_file_name, self.base_params)
+
+            print(f"Optimizing {entry_type} with {len(params)} parameters ({param_combinations} combinations)")
+            print(f"Mode: {settings.opt_mode.name}")
+            print(f"Criterion: {settings.opt_criterion.name}")
             print(f"Period: {start_date} to {end_date}")
             if forward_mode != "off":
                 if forward_mode == "custom":
@@ -276,11 +319,11 @@ UseCloud=0
                     print(f"Forward Testing: {forward_mode} of period")
             print()
 
-            # Launch MT5 (no /config: flag needed - MT5 reads Tester/config.ini automatically)
+            # Launch MT5
             terminal_exe = self.config.terminal_exe
             cmd = [terminal_exe]
 
-            print(f"Config written to: {config_path}")
+            print(f"Set file: {set_file_path}")
             print(f"Launching MT5 optimization...")
             print(f"This may take several minutes...")
             print()
@@ -328,6 +371,73 @@ UseCloud=0
             result["error"] = str(e)
 
         return result
+
+    def _write_set_file(
+        self,
+        params: List[OptimizationParam],
+        filename: str,
+        base_params: Optional[Dict[str, Any]] = None,
+    ) -> Path:
+        """
+        Write a .set file with input parameters for MT5 Strategy Tester.
+
+        The .set file format is:
+            ParamName=value                           (fixed value)
+            ParamName=value||start||step||stop||Y/N   (optimization range)
+
+        Where Y/N indicates if the parameter should be optimized.
+
+        Args:
+            params: List of OptimizationParam objects (to be optimized)
+            filename: Name for the .set file
+            base_params: Optional dict of fixed parameters from previous stages
+
+        Returns:
+            Path to the created .set file
+        """
+        # Ensure the Tester profiles directory exists
+        self.set_file_path.mkdir(parents=True, exist_ok=True)
+
+        set_path = self.set_file_path / filename
+
+        lines = ["; MT5 Strategy Tester Input Parameters",
+                 f"; Generated by JJC Optimizer on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                 ""]
+
+        # Track which params we're optimizing (to avoid duplicates)
+        optimizing_names = {p.name for p in params}
+
+        # First, write all FIXED base params (from previous stages)
+        if base_params:
+            lines.append("; === Fixed Parameters (from previous stages) ===")
+            for name, value in sorted(base_params.items()):
+                # Skip if this param will be optimized
+                if name in optimizing_names:
+                    continue
+                # Format value appropriately
+                if isinstance(value, bool):
+                    formatted = "true" if value else "false"
+                elif isinstance(value, float) and value == int(value):
+                    formatted = str(int(value))
+                else:
+                    formatted = str(value)
+                lines.append(f"{name}={formatted}")
+            lines.append("")
+
+        # Then write optimization params with ranges
+        lines.append("; === Optimization Parameters ===")
+        for param in params:
+            lines.append(f"{param.name}={param.to_ini_string()}")
+
+        # Write with ASCII encoding (MT5 expects plain text)
+        with open(set_path, 'w', encoding='ascii') as f:
+            f.write('\n'.join(lines))
+
+        print(f"Created .set file: {set_path}")
+        if base_params:
+            print(f"  Fixed params: {len(base_params) - len(optimizing_names)}")
+        print(f"  Optimization params: {len(params)}")
+        return set_path
 
     def _find_optimization_report(self) -> Optional[str]:
         """Find the optimization report file"""
