@@ -281,16 +281,17 @@ class WalkForwardOptimizer:
 
             # Run MT5 optimization with forward testing
             # Note: mt5_optimization.run_optimization() adds BOSSTESTENUMORATOR automatically
+            # Use "third" forward mode - MT5 automatically uses last 1/3 of period as OOS
+            # For 6-month windows: 4 months IS + 2 months OOS
             mt5_result = self.mt5_runner.run_optimization(
                 entry_type=self.config.entry_type,
                 params=opt_params,
                 start_date=window["optimization_start"],
-                end_date=window["forward_end"],  # End at forward end
+                end_date=window["forward_end"],  # End at forward end (6 months total)
                 optimization_mode=2 if self.config.genetic else 1,
                 criterion=self.config.criterion,
                 timeout=self.config.timeout_per_window,
-                forward_mode="custom",
-                forward_date=window["forward_start"],
+                forward_mode="third",  # 1/3 of period = 2 months OOS
             )
 
             result.duration_seconds = time.time() - window_start

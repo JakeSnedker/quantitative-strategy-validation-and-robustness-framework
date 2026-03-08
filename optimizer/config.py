@@ -87,7 +87,7 @@ class MT5Config:
 @dataclass
 class BacktestConfig:
     """Backtest settings"""
-    symbol: str = "US30"
+    symbol: str = "US30.cash"
     timeframe: str = "M1"
     start_date: str = "2025.08.01"
     end_date: str = "2026.02.01"
@@ -159,7 +159,7 @@ class Config:
         )
 
         backtest_config = BacktestConfig(
-            symbol=os.getenv("DEFAULT_SYMBOL", "US30"),
+            symbol=os.getenv("DEFAULT_SYMBOL", "US30.cash"),
             timeframe=os.getenv("DEFAULT_TIMEFRAME", "M1"),
             start_date=os.getenv("DEFAULT_START_DATE", "2025.08.01"),
             end_date=os.getenv("DEFAULT_END_DATE", "2026.02.01"),
