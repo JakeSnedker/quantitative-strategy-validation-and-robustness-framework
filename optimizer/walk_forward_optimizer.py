@@ -94,6 +94,9 @@ class WalkForwardReport:
     # Recommendations
     recommended_params: Optional[Dict[str, float]] = None
 
+    # Final validation backtest (full period with recommended params)
+    validation_backtest: Optional[Dict[str, Any]] = None
+
     # Execution metadata
     started_at: str = ""
     completed_at: str = ""
@@ -245,6 +248,9 @@ class WalkForwardOptimizer:
 
         # Check pass/fail criteria
         self._evaluate_criteria()
+
+        # Run final validation backtest with recommended params
+        self._run_validation_backtest()
 
         # Finalize report
         self.report.completed_at = datetime.now().isoformat()
@@ -548,6 +554,80 @@ class WalkForwardOptimizer:
             self.report.recommended_params = self.report.most_common_params.copy()
         else:
             self.report.status = PassFailStatus.FAIL
+
+    def _run_validation_backtest(self):
+        """
+        Run a final validation backtest using recommended params across full period.
+
+        This confirms the walk-forward selected params work on the complete dataset.
+        """
+        if not self.report.most_common_params:
+            print("\nSkipping validation backtest - no recommended params")
+            return
+
+        print("\n" + "=" * 60)
+        print("VALIDATION BACKTEST")
+        print(f"Testing most common params across full period")
+        print(f"Period: {self.config.start_date} to {self.config.end_date}")
+        print(f"Params: {self.report.most_common_params}")
+        print("=" * 60)
+
+        try:
+            # Create fixed params (not optimizing - just running backtest)
+            fixed_params = []
+            for param in self.config.params:
+                value = self.report.most_common_params.get(param.name, param.start)
+                fixed_params.append(OptimizationParam(
+                    name=param.name,
+                    start=value,
+                    step=0,  # No stepping - fixed value
+                    stop=value,
+                    current=value,
+                    optimize=False,  # Don't optimize
+                ))
+
+            # Run single backtest (optimization disabled, no forward)
+            result = self.mt5_runner.run_optimization(
+                entry_type=self.config.entry_type,
+                params=fixed_params,
+                start_date=self.config.start_date,
+                end_date=self.config.end_date,
+                optimization_mode=1,  # Complete (single run since no params to optimize)
+                criterion=self.config.criterion,
+                timeout=self.config.timeout_per_window,
+                forward_mode="off",  # No forward - pure backtest
+            )
+
+            if result["success"] and result["results"]:
+                best = result["results"][0]
+                self.report.validation_backtest = {
+                    "success": True,
+                    "profit_factor": best.profit_factor,
+                    "profit": best.profit,
+                    "drawdown_percent": best.drawdown_percent,
+                    "trades": best.trades,
+                    "start_date": self.config.start_date,
+                    "end_date": self.config.end_date,
+                    "params": self.report.most_common_params,
+                }
+                print(f"\nValidation Result:")
+                print(f"  Profit Factor: {best.profit_factor:.3f}")
+                print(f"  Profit: ${best.profit:.2f}")
+                print(f"  Max Drawdown: {best.drawdown_percent:.2f}%")
+                print(f"  Trades: {best.trades}")
+            else:
+                self.report.validation_backtest = {
+                    "success": False,
+                    "error": result.get("error", "No results"),
+                }
+                print(f"\nValidation FAILED: {result.get('error', 'No results')}")
+
+        except Exception as e:
+            self.report.validation_backtest = {
+                "success": False,
+                "error": str(e),
+            }
+            print(f"\nValidation ERROR: {e}")
 
     def save_report(self, output_dir: str = "results") -> str:
         """
