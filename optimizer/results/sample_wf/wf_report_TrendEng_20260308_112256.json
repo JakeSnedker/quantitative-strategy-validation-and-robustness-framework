@@ -1,0 +1,1785 @@
+{
+  "entry_type": "TrendEng",
+  "config": {
+    "entry_type": "TrendEng",
+    "start_date": "2024.07.01",
+    "end_date": "2025.12.31",
+    "optimization_months": 4,
+    "forward_months": 2,
+    "step_months": 2,
+    "params": [
+      {
+        "name": "ATRStopLossMultiplier",
+        "start": 1.0,
+        "stop": 3.5,
+        "step": 0.5
+      },
+      {
+        "name": "TakeProfitStopMultiplier",
+        "start": 1.5,
+        "stop": 4.0,
+        "step": 0.5
+      }
+    ]
+  },
+  "windows": [
+    {
+      "window_num": 0,
+      "optimization_start": "2024.07.01",
+      "optimization_end": "2024.11.01",
+      "forward_start": "2024.11.01",
+      "forward_end": "2025.01.01",
+      "best_params": {
+        "Forward Result": 1.31,
+        "Back Result": 0.69,
+        "ATRStopLossMultiplier": 2.5,
+        "TakeProfitStopMultiplier": 4.0
+      },
+      "in_sample_pf": 0.69,
+      "forward_pf": 1.31,
+      "forward_profit": 1260.33,
+      "forward_drawdown": 12.239,
+      "forward_trades": 69,
+      "all_results": [
+        {
+          "pass": 33,
+          "profit_factor": 1.309815,
+          "profit": 1260.33,
+          "drawdown": 12.239,
+          "trades": 69,
+          "params": {
+            "Forward Result": 1.31,
+            "Back Result": 0.69,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 27,
+          "profit_factor": 1.303141,
+          "profit": 1334.65,
+          "drawdown": 12.4109,
+          "trades": 78,
+          "params": {
+            "Forward Result": 1.3,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 31,
+          "profit_factor": 1.278214,
+          "profit": 2016.88,
+          "drawdown": 17.0406,
+          "trades": 138,
+          "params": {
+            "Forward Result": 1.28,
+            "Back Result": 0.96,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 32,
+          "profit_factor": 1.265406,
+          "profit": 1419.25,
+          "drawdown": 15.2594,
+          "trades": 101,
+          "params": {
+            "Forward Result": 1.27,
+            "Back Result": 0.75,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 15,
+          "profit_factor": 1.236381,
+          "profit": 944.07,
+          "drawdown": 12.2898,
+          "trades": 81,
+          "params": {
+            "Forward Result": 1.24,
+            "Back Result": 0.75,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 25,
+          "profit_factor": 1.222323,
+          "profit": 1716.16,
+          "drawdown": 16.4274,
+          "trades": 154,
+          "params": {
+            "Forward Result": 1.22,
+            "Back Result": 0.84,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 34,
+          "profit_factor": 1.219482,
+          "profit": 591.44,
+          "drawdown": 12.6649,
+          "trades": 51,
+          "params": {
+            "Forward Result": 1.22,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 14,
+          "profit_factor": 1.148615,
+          "profit": 1030.61,
+          "drawdown": 14.1838,
+          "trades": 133,
+          "params": {
+            "Forward Result": 1.15,
+            "Back Result": 0.81,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 16,
+          "profit_factor": 1.141636,
+          "profit": 568.88,
+          "drawdown": 13.5215,
+          "trades": 78,
+          "params": {
+            "Forward Result": 1.14,
+            "Back Result": 0.78,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 20,
+          "profit_factor": 1.125966,
+          "profit": 782.68,
+          "drawdown": 16.3185,
+          "trades": 118,
+          "params": {
+            "Forward Result": 1.13,
+            "Back Result": 0.79,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 3.0
+          }
+        },
+        {
+          "pass": 19,
+          "profit_factor": 1.121022,
+          "profit": 1215.9,
+          "drawdown": 18.8315,
+          "trades": 200,
+          "params": {
+            "Forward Result": 1.12,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 3.0
+          }
+        },
+        {
+          "pass": 35,
+          "profit_factor": 1.118638,
+          "profit": 299.52,
+          "drawdown": 13.9583,
+          "trades": 44,
+          "params": {
+            "Forward Result": 1.12,
+            "Back Result": 0.69,
+            "ATRStopLossMultiplier": 3.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 8,
+          "profit_factor": 1.110953,
+          "profit": 818.73,
+          "drawdown": 15.6621,
+          "trades": 164,
+          "params": {
+            "Forward Result": 1.11,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        },
+        {
+          "pass": 13,
+          "profit_factor": 1.102571,
+          "profit": 1073.39,
+          "drawdown": 16.7837,
+          "trades": 201,
+          "params": {
+            "Forward Result": 1.1,
+            "Back Result": 0.91,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 28,
+          "profit_factor": 1.101581,
+          "profit": 432.91,
+          "drawdown": 13.1772,
+          "trades": 77,
+          "params": {
+            "Forward Result": 1.1,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 26,
+          "profit_factor": 1.09403,
+          "profit": 530.84,
+          "drawdown": 17.3108,
+          "trades": 106,
+          "params": {
+            "Forward Result": 1.09,
+            "Back Result": 0.78,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 29,
+          "profit_factor": 1.093304,
+          "profit": 247.3,
+          "drawdown": 13.1762,
+          "trades": 49,
+          "params": {
+            "Forward Result": 1.09,
+            "Back Result": 0.65,
+            "ATRStopLossMultiplier": 3.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 1,
+          "profit_factor": 1.074648,
+          "profit": 1066.0,
+          "drawdown": 15.7274,
+          "trades": 328,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.91,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 1.5
+          }
+        },
+        {
+          "pass": 7,
+          "profit_factor": 1.068211,
+          "profit": 852.9,
+          "drawdown": 18.7366,
+          "trades": 266,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.87,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        },
+        {
+          "pass": 10,
+          "profit_factor": 1.067934,
+          "profit": 314.86,
+          "drawdown": 12.8597,
+          "trades": 90,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        }
+      ],
+      "duration_seconds": 10.025730609893799,
+      "success": true,
+      "error": null
+    },
+    {
+      "window_num": 1,
+      "optimization_start": "2024.09.01",
+      "optimization_end": "2025.01.01",
+      "forward_start": "2025.01.01",
+      "forward_end": "2025.03.01",
+      "best_params": {
+        "Forward Result": 1.31,
+        "Back Result": 0.69,
+        "ATRStopLossMultiplier": 2.5,
+        "TakeProfitStopMultiplier": 4.0
+      },
+      "in_sample_pf": 0.69,
+      "forward_pf": 1.31,
+      "forward_profit": 1260.33,
+      "forward_drawdown": 12.239,
+      "forward_trades": 69,
+      "all_results": [
+        {
+          "pass": 33,
+          "profit_factor": 1.309815,
+          "profit": 1260.33,
+          "drawdown": 12.239,
+          "trades": 69,
+          "params": {
+            "Forward Result": 1.31,
+            "Back Result": 0.69,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 27,
+          "profit_factor": 1.303141,
+          "profit": 1334.65,
+          "drawdown": 12.4109,
+          "trades": 78,
+          "params": {
+            "Forward Result": 1.3,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 31,
+          "profit_factor": 1.278214,
+          "profit": 2016.88,
+          "drawdown": 17.0406,
+          "trades": 138,
+          "params": {
+            "Forward Result": 1.28,
+            "Back Result": 0.96,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 32,
+          "profit_factor": 1.265406,
+          "profit": 1419.25,
+          "drawdown": 15.2594,
+          "trades": 101,
+          "params": {
+            "Forward Result": 1.27,
+            "Back Result": 0.75,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 15,
+          "profit_factor": 1.236381,
+          "profit": 944.07,
+          "drawdown": 12.2898,
+          "trades": 81,
+          "params": {
+            "Forward Result": 1.24,
+            "Back Result": 0.75,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 25,
+          "profit_factor": 1.222323,
+          "profit": 1716.16,
+          "drawdown": 16.4274,
+          "trades": 154,
+          "params": {
+            "Forward Result": 1.22,
+            "Back Result": 0.84,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 34,
+          "profit_factor": 1.219482,
+          "profit": 591.44,
+          "drawdown": 12.6649,
+          "trades": 51,
+          "params": {
+            "Forward Result": 1.22,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 14,
+          "profit_factor": 1.148615,
+          "profit": 1030.61,
+          "drawdown": 14.1838,
+          "trades": 133,
+          "params": {
+            "Forward Result": 1.15,
+            "Back Result": 0.81,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 16,
+          "profit_factor": 1.141636,
+          "profit": 568.88,
+          "drawdown": 13.5215,
+          "trades": 78,
+          "params": {
+            "Forward Result": 1.14,
+            "Back Result": 0.78,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 20,
+          "profit_factor": 1.125966,
+          "profit": 782.68,
+          "drawdown": 16.3185,
+          "trades": 118,
+          "params": {
+            "Forward Result": 1.13,
+            "Back Result": 0.79,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 3.0
+          }
+        },
+        {
+          "pass": 19,
+          "profit_factor": 1.121022,
+          "profit": 1215.9,
+          "drawdown": 18.8315,
+          "trades": 200,
+          "params": {
+            "Forward Result": 1.12,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 3.0
+          }
+        },
+        {
+          "pass": 35,
+          "profit_factor": 1.118638,
+          "profit": 299.52,
+          "drawdown": 13.9583,
+          "trades": 44,
+          "params": {
+            "Forward Result": 1.12,
+            "Back Result": 0.69,
+            "ATRStopLossMultiplier": 3.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 8,
+          "profit_factor": 1.110953,
+          "profit": 818.73,
+          "drawdown": 15.6621,
+          "trades": 164,
+          "params": {
+            "Forward Result": 1.11,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        },
+        {
+          "pass": 13,
+          "profit_factor": 1.102571,
+          "profit": 1073.39,
+          "drawdown": 16.7837,
+          "trades": 201,
+          "params": {
+            "Forward Result": 1.1,
+            "Back Result": 0.91,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 28,
+          "profit_factor": 1.101581,
+          "profit": 432.91,
+          "drawdown": 13.1772,
+          "trades": 77,
+          "params": {
+            "Forward Result": 1.1,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 26,
+          "profit_factor": 1.09403,
+          "profit": 530.84,
+          "drawdown": 17.3108,
+          "trades": 106,
+          "params": {
+            "Forward Result": 1.09,
+            "Back Result": 0.78,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 29,
+          "profit_factor": 1.093304,
+          "profit": 247.3,
+          "drawdown": 13.1762,
+          "trades": 49,
+          "params": {
+            "Forward Result": 1.09,
+            "Back Result": 0.65,
+            "ATRStopLossMultiplier": 3.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 1,
+          "profit_factor": 1.074648,
+          "profit": 1066.0,
+          "drawdown": 15.7274,
+          "trades": 328,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.91,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 1.5
+          }
+        },
+        {
+          "pass": 7,
+          "profit_factor": 1.068211,
+          "profit": 852.9,
+          "drawdown": 18.7366,
+          "trades": 266,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.87,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        },
+        {
+          "pass": 10,
+          "profit_factor": 1.067934,
+          "profit": 314.86,
+          "drawdown": 12.8597,
+          "trades": 90,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        }
+      ],
+      "duration_seconds": 10.007067203521729,
+      "success": true,
+      "error": null
+    },
+    {
+      "window_num": 2,
+      "optimization_start": "2024.11.01",
+      "optimization_end": "2025.03.01",
+      "forward_start": "2025.03.01",
+      "forward_end": "2025.05.01",
+      "best_params": {
+        "Forward Result": 1.31,
+        "Back Result": 0.69,
+        "ATRStopLossMultiplier": 2.5,
+        "TakeProfitStopMultiplier": 4.0
+      },
+      "in_sample_pf": 0.69,
+      "forward_pf": 1.31,
+      "forward_profit": 1260.33,
+      "forward_drawdown": 12.239,
+      "forward_trades": 69,
+      "all_results": [
+        {
+          "pass": 33,
+          "profit_factor": 1.309815,
+          "profit": 1260.33,
+          "drawdown": 12.239,
+          "trades": 69,
+          "params": {
+            "Forward Result": 1.31,
+            "Back Result": 0.69,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 27,
+          "profit_factor": 1.303141,
+          "profit": 1334.65,
+          "drawdown": 12.4109,
+          "trades": 78,
+          "params": {
+            "Forward Result": 1.3,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 31,
+          "profit_factor": 1.278214,
+          "profit": 2016.88,
+          "drawdown": 17.0406,
+          "trades": 138,
+          "params": {
+            "Forward Result": 1.28,
+            "Back Result": 0.96,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 32,
+          "profit_factor": 1.265406,
+          "profit": 1419.25,
+          "drawdown": 15.2594,
+          "trades": 101,
+          "params": {
+            "Forward Result": 1.27,
+            "Back Result": 0.75,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 15,
+          "profit_factor": 1.236381,
+          "profit": 944.07,
+          "drawdown": 12.2898,
+          "trades": 81,
+          "params": {
+            "Forward Result": 1.24,
+            "Back Result": 0.75,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 25,
+          "profit_factor": 1.222323,
+          "profit": 1716.16,
+          "drawdown": 16.4274,
+          "trades": 154,
+          "params": {
+            "Forward Result": 1.22,
+            "Back Result": 0.84,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 34,
+          "profit_factor": 1.219482,
+          "profit": 591.44,
+          "drawdown": 12.6649,
+          "trades": 51,
+          "params": {
+            "Forward Result": 1.22,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 14,
+          "profit_factor": 1.148615,
+          "profit": 1030.61,
+          "drawdown": 14.1838,
+          "trades": 133,
+          "params": {
+            "Forward Result": 1.15,
+            "Back Result": 0.81,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 16,
+          "profit_factor": 1.141636,
+          "profit": 568.88,
+          "drawdown": 13.5215,
+          "trades": 78,
+          "params": {
+            "Forward Result": 1.14,
+            "Back Result": 0.78,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 20,
+          "profit_factor": 1.125966,
+          "profit": 782.68,
+          "drawdown": 16.3185,
+          "trades": 118,
+          "params": {
+            "Forward Result": 1.13,
+            "Back Result": 0.79,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 3.0
+          }
+        },
+        {
+          "pass": 19,
+          "profit_factor": 1.121022,
+          "profit": 1215.9,
+          "drawdown": 18.8315,
+          "trades": 200,
+          "params": {
+            "Forward Result": 1.12,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 3.0
+          }
+        },
+        {
+          "pass": 35,
+          "profit_factor": 1.118638,
+          "profit": 299.52,
+          "drawdown": 13.9583,
+          "trades": 44,
+          "params": {
+            "Forward Result": 1.12,
+            "Back Result": 0.69,
+            "ATRStopLossMultiplier": 3.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 8,
+          "profit_factor": 1.110953,
+          "profit": 818.73,
+          "drawdown": 15.6621,
+          "trades": 164,
+          "params": {
+            "Forward Result": 1.11,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        },
+        {
+          "pass": 13,
+          "profit_factor": 1.102571,
+          "profit": 1073.39,
+          "drawdown": 16.7837,
+          "trades": 201,
+          "params": {
+            "Forward Result": 1.1,
+            "Back Result": 0.91,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 28,
+          "profit_factor": 1.101581,
+          "profit": 432.91,
+          "drawdown": 13.1772,
+          "trades": 77,
+          "params": {
+            "Forward Result": 1.1,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 26,
+          "profit_factor": 1.09403,
+          "profit": 530.84,
+          "drawdown": 17.3108,
+          "trades": 106,
+          "params": {
+            "Forward Result": 1.09,
+            "Back Result": 0.78,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 29,
+          "profit_factor": 1.093304,
+          "profit": 247.3,
+          "drawdown": 13.1762,
+          "trades": 49,
+          "params": {
+            "Forward Result": 1.09,
+            "Back Result": 0.65,
+            "ATRStopLossMultiplier": 3.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 1,
+          "profit_factor": 1.074648,
+          "profit": 1066.0,
+          "drawdown": 15.7274,
+          "trades": 328,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.91,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 1.5
+          }
+        },
+        {
+          "pass": 7,
+          "profit_factor": 1.068211,
+          "profit": 852.9,
+          "drawdown": 18.7366,
+          "trades": 266,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.87,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        },
+        {
+          "pass": 10,
+          "profit_factor": 1.067934,
+          "profit": 314.86,
+          "drawdown": 12.8597,
+          "trades": 90,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        }
+      ],
+      "duration_seconds": 10.009088516235352,
+      "success": true,
+      "error": null
+    },
+    {
+      "window_num": 3,
+      "optimization_start": "2025.01.01",
+      "optimization_end": "2025.05.01",
+      "forward_start": "2025.05.01",
+      "forward_end": "2025.07.01",
+      "best_params": {
+        "Forward Result": 1.31,
+        "Back Result": 0.69,
+        "ATRStopLossMultiplier": 2.5,
+        "TakeProfitStopMultiplier": 4.0
+      },
+      "in_sample_pf": 0.69,
+      "forward_pf": 1.31,
+      "forward_profit": 1260.33,
+      "forward_drawdown": 12.239,
+      "forward_trades": 69,
+      "all_results": [
+        {
+          "pass": 33,
+          "profit_factor": 1.309815,
+          "profit": 1260.33,
+          "drawdown": 12.239,
+          "trades": 69,
+          "params": {
+            "Forward Result": 1.31,
+            "Back Result": 0.69,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 27,
+          "profit_factor": 1.303141,
+          "profit": 1334.65,
+          "drawdown": 12.4109,
+          "trades": 78,
+          "params": {
+            "Forward Result": 1.3,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 31,
+          "profit_factor": 1.278214,
+          "profit": 2016.88,
+          "drawdown": 17.0406,
+          "trades": 138,
+          "params": {
+            "Forward Result": 1.28,
+            "Back Result": 0.96,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 32,
+          "profit_factor": 1.265406,
+          "profit": 1419.25,
+          "drawdown": 15.2594,
+          "trades": 101,
+          "params": {
+            "Forward Result": 1.27,
+            "Back Result": 0.75,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 15,
+          "profit_factor": 1.236381,
+          "profit": 944.07,
+          "drawdown": 12.2898,
+          "trades": 81,
+          "params": {
+            "Forward Result": 1.24,
+            "Back Result": 0.75,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 25,
+          "profit_factor": 1.222323,
+          "profit": 1716.16,
+          "drawdown": 16.4274,
+          "trades": 154,
+          "params": {
+            "Forward Result": 1.22,
+            "Back Result": 0.84,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 34,
+          "profit_factor": 1.219482,
+          "profit": 591.44,
+          "drawdown": 12.6649,
+          "trades": 51,
+          "params": {
+            "Forward Result": 1.22,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 14,
+          "profit_factor": 1.148615,
+          "profit": 1030.61,
+          "drawdown": 14.1838,
+          "trades": 133,
+          "params": {
+            "Forward Result": 1.15,
+            "Back Result": 0.81,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 16,
+          "profit_factor": 1.141636,
+          "profit": 568.88,
+          "drawdown": 13.5215,
+          "trades": 78,
+          "params": {
+            "Forward Result": 1.14,
+            "Back Result": 0.78,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 20,
+          "profit_factor": 1.125966,
+          "profit": 782.68,
+          "drawdown": 16.3185,
+          "trades": 118,
+          "params": {
+            "Forward Result": 1.13,
+            "Back Result": 0.79,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 3.0
+          }
+        },
+        {
+          "pass": 19,
+          "profit_factor": 1.121022,
+          "profit": 1215.9,
+          "drawdown": 18.8315,
+          "trades": 200,
+          "params": {
+            "Forward Result": 1.12,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 3.0
+          }
+        },
+        {
+          "pass": 35,
+          "profit_factor": 1.118638,
+          "profit": 299.52,
+          "drawdown": 13.9583,
+          "trades": 44,
+          "params": {
+            "Forward Result": 1.12,
+            "Back Result": 0.69,
+            "ATRStopLossMultiplier": 3.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 8,
+          "profit_factor": 1.110953,
+          "profit": 818.73,
+          "drawdown": 15.6621,
+          "trades": 164,
+          "params": {
+            "Forward Result": 1.11,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        },
+        {
+          "pass": 13,
+          "profit_factor": 1.102571,
+          "profit": 1073.39,
+          "drawdown": 16.7837,
+          "trades": 201,
+          "params": {
+            "Forward Result": 1.1,
+            "Back Result": 0.91,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 28,
+          "profit_factor": 1.101581,
+          "profit": 432.91,
+          "drawdown": 13.1772,
+          "trades": 77,
+          "params": {
+            "Forward Result": 1.1,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 26,
+          "profit_factor": 1.09403,
+          "profit": 530.84,
+          "drawdown": 17.3108,
+          "trades": 106,
+          "params": {
+            "Forward Result": 1.09,
+            "Back Result": 0.78,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 29,
+          "profit_factor": 1.093304,
+          "profit": 247.3,
+          "drawdown": 13.1762,
+          "trades": 49,
+          "params": {
+            "Forward Result": 1.09,
+            "Back Result": 0.65,
+            "ATRStopLossMultiplier": 3.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 1,
+          "profit_factor": 1.074648,
+          "profit": 1066.0,
+          "drawdown": 15.7274,
+          "trades": 328,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.91,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 1.5
+          }
+        },
+        {
+          "pass": 7,
+          "profit_factor": 1.068211,
+          "profit": 852.9,
+          "drawdown": 18.7366,
+          "trades": 266,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.87,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        },
+        {
+          "pass": 10,
+          "profit_factor": 1.067934,
+          "profit": 314.86,
+          "drawdown": 12.8597,
+          "trades": 90,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        }
+      ],
+      "duration_seconds": 10.006760358810425,
+      "success": true,
+      "error": null
+    },
+    {
+      "window_num": 4,
+      "optimization_start": "2025.03.01",
+      "optimization_end": "2025.07.01",
+      "forward_start": "2025.07.01",
+      "forward_end": "2025.09.01",
+      "best_params": {
+        "Forward Result": 1.31,
+        "Back Result": 0.69,
+        "ATRStopLossMultiplier": 2.5,
+        "TakeProfitStopMultiplier": 4.0
+      },
+      "in_sample_pf": 0.69,
+      "forward_pf": 1.31,
+      "forward_profit": 1260.33,
+      "forward_drawdown": 12.239,
+      "forward_trades": 69,
+      "all_results": [
+        {
+          "pass": 33,
+          "profit_factor": 1.309815,
+          "profit": 1260.33,
+          "drawdown": 12.239,
+          "trades": 69,
+          "params": {
+            "Forward Result": 1.31,
+            "Back Result": 0.69,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 27,
+          "profit_factor": 1.303141,
+          "profit": 1334.65,
+          "drawdown": 12.4109,
+          "trades": 78,
+          "params": {
+            "Forward Result": 1.3,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 31,
+          "profit_factor": 1.278214,
+          "profit": 2016.88,
+          "drawdown": 17.0406,
+          "trades": 138,
+          "params": {
+            "Forward Result": 1.28,
+            "Back Result": 0.96,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 32,
+          "profit_factor": 1.265406,
+          "profit": 1419.25,
+          "drawdown": 15.2594,
+          "trades": 101,
+          "params": {
+            "Forward Result": 1.27,
+            "Back Result": 0.75,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 15,
+          "profit_factor": 1.236381,
+          "profit": 944.07,
+          "drawdown": 12.2898,
+          "trades": 81,
+          "params": {
+            "Forward Result": 1.24,
+            "Back Result": 0.75,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 25,
+          "profit_factor": 1.222323,
+          "profit": 1716.16,
+          "drawdown": 16.4274,
+          "trades": 154,
+          "params": {
+            "Forward Result": 1.22,
+            "Back Result": 0.84,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 34,
+          "profit_factor": 1.219482,
+          "profit": 591.44,
+          "drawdown": 12.6649,
+          "trades": 51,
+          "params": {
+            "Forward Result": 1.22,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 14,
+          "profit_factor": 1.148615,
+          "profit": 1030.61,
+          "drawdown": 14.1838,
+          "trades": 133,
+          "params": {
+            "Forward Result": 1.15,
+            "Back Result": 0.81,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 16,
+          "profit_factor": 1.141636,
+          "profit": 568.88,
+          "drawdown": 13.5215,
+          "trades": 78,
+          "params": {
+            "Forward Result": 1.14,
+            "Back Result": 0.78,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 20,
+          "profit_factor": 1.125966,
+          "profit": 782.68,
+          "drawdown": 16.3185,
+          "trades": 118,
+          "params": {
+            "Forward Result": 1.13,
+            "Back Result": 0.79,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 3.0
+          }
+        },
+        {
+          "pass": 19,
+          "profit_factor": 1.121022,
+          "profit": 1215.9,
+          "drawdown": 18.8315,
+          "trades": 200,
+          "params": {
+            "Forward Result": 1.12,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 3.0
+          }
+        },
+        {
+          "pass": 35,
+          "profit_factor": 1.118638,
+          "profit": 299.52,
+          "drawdown": 13.9583,
+          "trades": 44,
+          "params": {
+            "Forward Result": 1.12,
+            "Back Result": 0.69,
+            "ATRStopLossMultiplier": 3.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 8,
+          "profit_factor": 1.110953,
+          "profit": 818.73,
+          "drawdown": 15.6621,
+          "trades": 164,
+          "params": {
+            "Forward Result": 1.11,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        },
+        {
+          "pass": 13,
+          "profit_factor": 1.102571,
+          "profit": 1073.39,
+          "drawdown": 16.7837,
+          "trades": 201,
+          "params": {
+            "Forward Result": 1.1,
+            "Back Result": 0.91,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 28,
+          "profit_factor": 1.101581,
+          "profit": 432.91,
+          "drawdown": 13.1772,
+          "trades": 77,
+          "params": {
+            "Forward Result": 1.1,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 26,
+          "profit_factor": 1.09403,
+          "profit": 530.84,
+          "drawdown": 17.3108,
+          "trades": 106,
+          "params": {
+            "Forward Result": 1.09,
+            "Back Result": 0.78,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 29,
+          "profit_factor": 1.093304,
+          "profit": 247.3,
+          "drawdown": 13.1762,
+          "trades": 49,
+          "params": {
+            "Forward Result": 1.09,
+            "Back Result": 0.65,
+            "ATRStopLossMultiplier": 3.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 1,
+          "profit_factor": 1.074648,
+          "profit": 1066.0,
+          "drawdown": 15.7274,
+          "trades": 328,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.91,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 1.5
+          }
+        },
+        {
+          "pass": 7,
+          "profit_factor": 1.068211,
+          "profit": 852.9,
+          "drawdown": 18.7366,
+          "trades": 266,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.87,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        },
+        {
+          "pass": 10,
+          "profit_factor": 1.067934,
+          "profit": 314.86,
+          "drawdown": 12.8597,
+          "trades": 90,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        }
+      ],
+      "duration_seconds": 10.009045124053955,
+      "success": true,
+      "error": null
+    },
+    {
+      "window_num": 5,
+      "optimization_start": "2025.05.01",
+      "optimization_end": "2025.09.01",
+      "forward_start": "2025.09.01",
+      "forward_end": "2025.11.01",
+      "best_params": {
+        "Forward Result": 1.31,
+        "Back Result": 0.69,
+        "ATRStopLossMultiplier": 2.5,
+        "TakeProfitStopMultiplier": 4.0
+      },
+      "in_sample_pf": 0.69,
+      "forward_pf": 1.31,
+      "forward_profit": 1260.33,
+      "forward_drawdown": 12.239,
+      "forward_trades": 69,
+      "all_results": [
+        {
+          "pass": 33,
+          "profit_factor": 1.309815,
+          "profit": 1260.33,
+          "drawdown": 12.239,
+          "trades": 69,
+          "params": {
+            "Forward Result": 1.31,
+            "Back Result": 0.69,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 27,
+          "profit_factor": 1.303141,
+          "profit": 1334.65,
+          "drawdown": 12.4109,
+          "trades": 78,
+          "params": {
+            "Forward Result": 1.3,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 31,
+          "profit_factor": 1.278214,
+          "profit": 2016.88,
+          "drawdown": 17.0406,
+          "trades": 138,
+          "params": {
+            "Forward Result": 1.28,
+            "Back Result": 0.96,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 32,
+          "profit_factor": 1.265406,
+          "profit": 1419.25,
+          "drawdown": 15.2594,
+          "trades": 101,
+          "params": {
+            "Forward Result": 1.27,
+            "Back Result": 0.75,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 15,
+          "profit_factor": 1.236381,
+          "profit": 944.07,
+          "drawdown": 12.2898,
+          "trades": 81,
+          "params": {
+            "Forward Result": 1.24,
+            "Back Result": 0.75,
+            "ATRStopLossMultiplier": 2.5,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 25,
+          "profit_factor": 1.222323,
+          "profit": 1716.16,
+          "drawdown": 16.4274,
+          "trades": 154,
+          "params": {
+            "Forward Result": 1.22,
+            "Back Result": 0.84,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 34,
+          "profit_factor": 1.219482,
+          "profit": 591.44,
+          "drawdown": 12.6649,
+          "trades": 51,
+          "params": {
+            "Forward Result": 1.22,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 14,
+          "profit_factor": 1.148615,
+          "profit": 1030.61,
+          "drawdown": 14.1838,
+          "trades": 133,
+          "params": {
+            "Forward Result": 1.15,
+            "Back Result": 0.81,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 16,
+          "profit_factor": 1.141636,
+          "profit": 568.88,
+          "drawdown": 13.5215,
+          "trades": 78,
+          "params": {
+            "Forward Result": 1.14,
+            "Back Result": 0.78,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 20,
+          "profit_factor": 1.125966,
+          "profit": 782.68,
+          "drawdown": 16.3185,
+          "trades": 118,
+          "params": {
+            "Forward Result": 1.13,
+            "Back Result": 0.79,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 3.0
+          }
+        },
+        {
+          "pass": 19,
+          "profit_factor": 1.121022,
+          "profit": 1215.9,
+          "drawdown": 18.8315,
+          "trades": 200,
+          "params": {
+            "Forward Result": 1.12,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 3.0
+          }
+        },
+        {
+          "pass": 35,
+          "profit_factor": 1.118638,
+          "profit": 299.52,
+          "drawdown": 13.9583,
+          "trades": 44,
+          "params": {
+            "Forward Result": 1.12,
+            "Back Result": 0.69,
+            "ATRStopLossMultiplier": 3.5,
+            "TakeProfitStopMultiplier": 4.0
+          }
+        },
+        {
+          "pass": 8,
+          "profit_factor": 1.110953,
+          "profit": 818.73,
+          "drawdown": 15.6621,
+          "trades": 164,
+          "params": {
+            "Forward Result": 1.11,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        },
+        {
+          "pass": 13,
+          "profit_factor": 1.102571,
+          "profit": 1073.39,
+          "drawdown": 16.7837,
+          "trades": 201,
+          "params": {
+            "Forward Result": 1.1,
+            "Back Result": 0.91,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 2.5
+          }
+        },
+        {
+          "pass": 28,
+          "profit_factor": 1.101581,
+          "profit": 432.91,
+          "drawdown": 13.1772,
+          "trades": 77,
+          "params": {
+            "Forward Result": 1.1,
+            "Back Result": 0.73,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 26,
+          "profit_factor": 1.09403,
+          "profit": 530.84,
+          "drawdown": 17.3108,
+          "trades": 106,
+          "params": {
+            "Forward Result": 1.09,
+            "Back Result": 0.78,
+            "ATRStopLossMultiplier": 2.0,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 29,
+          "profit_factor": 1.093304,
+          "profit": 247.3,
+          "drawdown": 13.1762,
+          "trades": 49,
+          "params": {
+            "Forward Result": 1.09,
+            "Back Result": 0.65,
+            "ATRStopLossMultiplier": 3.5,
+            "TakeProfitStopMultiplier": 3.5
+          }
+        },
+        {
+          "pass": 1,
+          "profit_factor": 1.074648,
+          "profit": 1066.0,
+          "drawdown": 15.7274,
+          "trades": 328,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.91,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 1.5
+          }
+        },
+        {
+          "pass": 7,
+          "profit_factor": 1.068211,
+          "profit": 852.9,
+          "drawdown": 18.7366,
+          "trades": 266,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.87,
+            "ATRStopLossMultiplier": 1.5,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        },
+        {
+          "pass": 10,
+          "profit_factor": 1.067934,
+          "profit": 314.86,
+          "drawdown": 12.8597,
+          "trades": 90,
+          "params": {
+            "Forward Result": 1.07,
+            "Back Result": 0.86,
+            "ATRStopLossMultiplier": 3.0,
+            "TakeProfitStopMultiplier": 2.0
+          }
+        }
+      ],
+      "duration_seconds": 10.008909225463867,
+      "success": true,
+      "error": null
+    }
+  ],
+  "total_windows": 6,
+  "successful_windows": 6,
+  "total_forward_trades": 414,
+  "combined_forward_pf": 1.31,
+  "combined_forward_profit": 7561.98,
+  "max_forward_drawdown": 12.239,
+  "walk_forward_efficiency": 1.8985507246376814,
+  "most_common_params": {
+    "ATRStopLossMultiplier": 2.5,
+    "TakeProfitStopMultiplier": 4.0
+  },
+  "param_consistency": 1.0,
+  "monte_carlo_p_profit": 1.0,
+  "monte_carlo_p_ruin": 0.0,
+  "monte_carlo_95_ci": [
+    7561.980000000123,
+    7561.980000000123
+  ],
+  "status": "FAIL",
+  "criteria_results": {
+    "forward_profit_factor": {
+      "value": 1.31,
+      "minimum": 1.0,
+      "ideal": 1.3,
+      "passed": true
+    },
+    "max_drawdown": {
+      "value": 12.239,
+      "minimum": 10.0,
+      "passed": false
+    },
+    "trades_per_window": {
+      "value": 69.0,
+      "minimum": 20,
+      "passed": true
+    },
+    "walk_forward_efficiency": {
+      "value": 1.8985507246376814,
+      "minimum": 0.5,
+      "ideal": 0.7,
+      "passed": true
+    },
+    "monte_carlo_ruin": {
+      "value": 0.0,
+      "maximum": 0.15,
+      "passed": true
+    },
+    "window_success_rate": {
+      "value": 1.0,
+      "minimum": 0.5,
+      "passed": true
+    }
+  },
+  "failure_reasons": [
+    "Max DD 12.24% > limit 10.0%"
+  ],
+  "recommended_params": null,
+  "started_at": "2026-03-08T11:21:56.183742",
+  "completed_at": "2026-03-08T11:22:56.805838",
+  "total_duration_seconds": 60.62210559844971
+}

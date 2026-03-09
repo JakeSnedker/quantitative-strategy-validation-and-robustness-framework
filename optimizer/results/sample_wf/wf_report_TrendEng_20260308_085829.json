@@ -1,0 +1,50 @@
+{
+  "entry_type": "TrendEng",
+  "config": {
+    "entry_type": "TrendEng",
+    "start_date": "2024.07.01",
+    "end_date": "2024.12.31",
+    "optimization_months": 4,
+    "forward_months": 2,
+    "step_months": 2,
+    "params": [
+      {
+        "name": "ATRStopLossMultiplier",
+        "start": 1.0,
+        "stop": 3.5,
+        "step": 0.5
+      },
+      {
+        "name": "TakeProfitStopMultiplier",
+        "start": 1.5,
+        "stop": 4.0,
+        "step": 0.5
+      }
+    ]
+  },
+  "windows": [],
+  "total_windows": 0,
+  "successful_windows": 0,
+  "total_forward_trades": 0,
+  "combined_forward_pf": 0.0,
+  "combined_forward_profit": 0.0,
+  "max_forward_drawdown": 0.0,
+  "walk_forward_efficiency": 0.0,
+  "most_common_params": {},
+  "param_consistency": 0.0,
+  "monte_carlo_p_profit": 0.0,
+  "monte_carlo_p_ruin": 0.0,
+  "monte_carlo_95_ci": [
+    0.0,
+    0.0
+  ],
+  "status": "FAIL",
+  "criteria_results": {},
+  "failure_reasons": [
+    "Insufficient data: 0 windows, need 4. Extend date range or reduce window sizes."
+  ],
+  "recommended_params": null,
+  "started_at": "2026-03-08T08:58:29.350655",
+  "completed_at": "",
+  "total_duration_seconds": 0.0
+}

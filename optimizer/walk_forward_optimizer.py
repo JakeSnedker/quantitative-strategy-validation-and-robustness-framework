@@ -684,6 +684,7 @@ def run_walk_forward(
 
 if __name__ == "__main__":
     import argparse
+    from walk_forward_config import get_stage1_config
 
     parser = argparse.ArgumentParser(description="Walk-Forward Optimizer")
     parser.add_argument("entry", choices=list(ENTRY_TYPES.keys()),
@@ -694,14 +695,33 @@ if __name__ == "__main__":
                        help="End date (YYYY.MM.DD)")
     parser.add_argument("-o", "--output", default="results",
                        help="Output directory")
+    parser.add_argument("--phase", type=int, choices=[1, 2],
+                       help="Stage 1 phase: 1=ATR SL, 2=L_O_TH SL")
 
     args = parser.parse_args()
 
-    report = run_walk_forward(
-        entry_type=args.entry,
-        start_date=args.start,
-        end_date=args.end,
-        output_dir=args.output,
-    )
+    if args.phase:
+        # Stage 1 phased testing
+        config, base_params = get_stage1_config(args.entry, args.phase)
+        config.start_date = args.start
+        config.end_date = args.end
+
+        phase_name = "ATR_SL" if args.phase == 1 else "LOTH_SL"
+        print(f"\n{'='*60}")
+        print(f"STAGE 1 PHASE {args.phase}: {phase_name}")
+        print(f"Base params: {base_params}")
+        print(f"{'='*60}\n")
+
+        optimizer = WalkForwardOptimizer(config, base_params=base_params)
+        report = optimizer.run()
+        optimizer.save_report(f"{args.output}/stage1_phase{args.phase}")
+    else:
+        # Default run (ATR SL params, backwards compatible)
+        report = run_walk_forward(
+            entry_type=args.entry,
+            start_date=args.start,
+            end_date=args.end,
+            output_dir=args.output,
+        )
 
     print(f"\nFinal Status: {report.status.value}")

@@ -137,8 +137,8 @@ class OptimizationParameter:
     optimize: bool = True
 
 
-# Core parameters to optimize (Phase 1: Risk/Reward)
-CORE_OPTIMIZATION_PARAMS: List[OptimizationParameter] = [
+# Stage 1 Phase 1: ATR SL + TP Multiplier
+ATR_SL_PARAMS: List[OptimizationParameter] = [
     OptimizationParameter(
         name="ATRStopLossMultiplier",
         start=1.0,
@@ -154,6 +154,27 @@ CORE_OPTIMIZATION_PARAMS: List[OptimizationParameter] = [
         description="R:R multiplier (TP = SL * this value)"
     ),
 ]
+
+# Stage 1 Phase 2: L_O_TH SL + TP Multiplier
+LOTH_SL_PARAMS: List[OptimizationParameter] = [
+    OptimizationParameter(
+        name="SpreadMultiplier2",
+        start=1.0,
+        stop=3.0,
+        step=0.5,
+        description="Spread multiplier for L_O_TH stop loss"
+    ),
+    OptimizationParameter(
+        name="TakeProfitStopMultiplier",
+        start=1.5,
+        stop=4.0,
+        step=0.5,
+        description="R:R multiplier (TP = SL * this value)"
+    ),
+]
+
+# Alias for backwards compatibility
+CORE_OPTIMIZATION_PARAMS = ATR_SL_PARAMS
 
 # Extended parameters (Phase 2: After core is validated)
 EXTENDED_OPTIMIZATION_PARAMS: List[OptimizationParameter] = [
@@ -270,6 +291,60 @@ def get_default_config(entry_type: str) -> WalkForwardConfig:
         criteria=PassFailCriteria(),
         params=CORE_OPTIMIZATION_PARAMS.copy(),
     )
+
+
+def get_stage1_config(entry_type: str, phase: int = 1) -> tuple:
+    """
+    Get Stage 1 configuration for a specific phase.
+
+    Args:
+        entry_type: Entry pattern name
+        phase: 1 = ATR SL, 2 = L_O_TH SL, 3 = Best SL + all TP methods
+
+    Returns:
+        Tuple of (WalkForwardConfig, base_params dict)
+        base_params contains fixed params like StopLossMethod
+    """
+    if phase == 1:
+        # Phase 1: ATR SL (Method 3) + TP Multiplier
+        config = WalkForwardConfig(
+            entry_type=entry_type,
+            start_date="2024.07.01",
+            end_date="2025.12.31",
+            walk_forward=WalkForwardSettings(
+                optimization_months=4,
+                forward_months=2,
+                step_months=2,
+            ),
+            criteria=PassFailCriteria(),
+            params=ATR_SL_PARAMS.copy(),
+        )
+        base_params = {
+            "StopLossMethod": 3,  # ATR
+            "TakeProfitMethod": 3,  # Multiplier
+        }
+    elif phase == 2:
+        # Phase 2: L_O_TH SL (Method 6) + TP Multiplier
+        config = WalkForwardConfig(
+            entry_type=entry_type,
+            start_date="2024.07.01",
+            end_date="2025.12.31",
+            walk_forward=WalkForwardSettings(
+                optimization_months=4,
+                forward_months=2,
+                step_months=2,
+            ),
+            criteria=PassFailCriteria(),
+            params=LOTH_SL_PARAMS.copy(),
+        )
+        base_params = {
+            "StopLossMethod": 6,  # L_O_TH
+            "TakeProfitMethod": 3,  # Multiplier
+        }
+    else:
+        raise ValueError(f"Invalid phase: {phase}. Must be 1, 2, or 3.")
+
+    return config, base_params
 
 
 if __name__ == "__main__":

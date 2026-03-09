@@ -98,6 +98,30 @@ class MT5OptimizationRunner:
         # Base params from previous stages (for staged optimization)
         self.base_params: Optional[Dict[str, Any]] = None
 
+    def _reset_set_file(self):
+        """
+        Copy clean baseline .set file to Tester profiles folder.
+
+        This ensures MT5 starts with NO params selected for optimization,
+        so only params enabled in config.ini [TesterInputs] will be optimized.
+        """
+        import shutil
+
+        template_path = Path(__file__).parent / "templates" / "baseline.set"
+        ea_name = self.config.ea_name.replace('.ex5', '')
+        target_path = self.set_file_path / f"{ea_name}.set"
+
+        if template_path.exists():
+            # Remove read-only flag if exists
+            if target_path.exists():
+                target_path.chmod(0o644)
+
+            # Copy clean template
+            shutil.copy2(template_path, target_path)
+            print(f"Reset .set file: {target_path.name}")
+        else:
+            print(f"WARNING: Baseline template not found: {template_path}")
+
     def _write_batch_config(
         self,
         start_date: str,
@@ -105,6 +129,7 @@ class MT5OptimizationRunner:
         params: List["OptimizationParam"],
         optimization_mode: "OptimizationMode",
         forward_mode: "ForwardMode",
+        base_params: Optional[Dict[str, Any]] = None,
     ) -> Path:
         """
         Write batch mode config.ini with [TesterInputs] section.
@@ -135,6 +160,18 @@ class MT5OptimizationRunner:
 
         # Build [TesterInputs] section
         inputs_lines = []
+
+        # First add base_params as fixed values (not optimized)
+        if base_params:
+            for name, value in base_params.items():
+                # Format: value||value||0||value||N (fixed, no optimization)
+                if isinstance(value, bool):
+                    v = "true" if value else "false"
+                    inputs_lines.append(f"{name}={v}||{v}||0||{v}||N")
+                else:
+                    inputs_lines.append(f"{name}={value}||{value}||0||{value}||N")
+
+        # Then add optimization params
         for param in params:
             inputs_lines.append(f"{param.name}={param.to_ini_string()}")
         inputs_section = "\n".join(inputs_lines)
@@ -375,6 +412,9 @@ UseCloud=0
             if forward_mode == "custom" and forward_date:
                 settings.opt_forward_date = TesterSettings._date_to_timestamp(forward_date)
 
+            # Copy clean baseline .set file to prevent MT5 using stale optimization flags
+            self._reset_set_file()
+
             # Write batch mode config.ini with [TesterInputs] section
             # This is what triggers MT5 to auto-start the optimization
             config_ini_path = self._write_batch_config(
@@ -383,6 +423,7 @@ UseCloud=0
                 params=all_params,
                 optimization_mode=settings.opt_mode,
                 forward_mode=fwd_mode,
+                base_params=self.base_params,
             )
 
             print(f"Optimizing {entry_type} with {len(params)} parameters ({param_combinations} combinations)")
