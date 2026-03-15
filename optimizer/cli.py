@@ -5,20 +5,23 @@ JJC Bot Optimizer CLI
 Main entry point for the optimization framework.
 
 Usage:
+    python cli.py backtest TrendEng --monte-carlo
+    python cli.py backtest TrendEng -p StopLossMethod=6 TakeProfitMethod=3 --monte-carlo
     python cli.py staged TrendEng --start-date 2024.07.01 --end-date 2025.12.31
     python cli.py walk-forward TrendEng --start-date 2024.07.01 --end-date 2025.12.31
     python cli.py mt5-optimize TrendEng -p ATRStopLossMultiplier=1.0,0.5,3.0 --forward third
     python cli.py baseline TrendEng
-    python cli.py monte-carlo results.json --simulations 10000
+    python cli.py monte-carlo results.json --simulations 10000 --visualize
     python cli.py test
     python cli.py status
 
 Commands:
+    backtest     - Run single backtest with optional Monte Carlo analysis
     staged       - Run the full 5-stage optimization architecture (recommended)
     walk-forward - Run simple walk-forward optimization
     mt5-optimize - Run MT5's native optimization (genetic/sweep)
     baseline     - Run baseline test for an entry
-    monte-carlo  - Run Monte Carlo simulation on results
+    monte-carlo  - Run Monte Carlo simulation on results file
     test         - Run system tests
     status       - Show system status and configuration
 """
@@ -71,6 +74,105 @@ def cmd_optimize(args):
     return 0
 
 
+def cmd_backtest(args):
+    """Run a single backtest and optionally run Monte Carlo."""
+    from mt5_optimization import MT5OptimizationRunner, OptimizationParam
+    from config import get_config
+
+    config = get_config()
+    runner = MT5OptimizationRunner(config.mt5)  # Pass mt5 config, not full config
+
+    print(f"Running single backtest for {args.entry}...")
+    print(f"Period: {args.start_date} to {args.end_date}")
+
+    # Build fixed params (no optimization - single values)
+    params = []
+    if args.params:
+        for param in args.params:
+            parts = param.split("=")
+            if len(parts) == 2:
+                name = parts[0]
+                value = float(parts[1])
+                params.append(OptimizationParam(
+                    name=name,
+                    start=value,
+                    step=0,
+                    stop=value,
+                    current=value,
+                    optimize=False
+                ))
+                print(f"  {name}: {value}")
+
+    # Run backtest
+    result = runner.run_optimization(
+        entry_type=args.entry,
+        params=params if params else [],
+        start_date=args.start_date,
+        end_date=args.end_date,
+        optimization_mode=1,  # Complete (single run)
+        criterion="profit_factor",
+        timeout=args.timeout,
+        forward_mode="off",
+    )
+
+    if result["success"] and result["results"]:
+        best = result["results"][0]
+        print(f"\nBacktest Result:")
+        print(f"  Profit Factor: {best.profit_factor:.3f}")
+        print(f"  Net Profit: ${best.profit:.2f}")
+        print(f"  Drawdown: {best.drawdown_percent:.2f}%")
+        print(f"  Trades: {best.trades}")
+
+        # Try to parse HTML report for individual trades
+        trades_pnl = []
+        if result.get("report_path"):
+            try:
+                from results_parser import parse_results, extract_trade_pnl
+                parsed = parse_results(result["report_path"])
+                trades_pnl = extract_trade_pnl(parsed)
+                print(f"  Individual trades extracted: {len(trades_pnl)}")
+            except Exception as e:
+                print(f"  Could not extract individual trades: {e}")
+
+        # Run Monte Carlo if we have trades and user requested it
+        if args.monte_carlo and trades_pnl:
+            print(f"\nRunning Monte Carlo analysis ({args.simulations} simulations)...")
+            from monte_carlo_viz import create_full_monte_carlo_report
+
+            mc_output = Path(args.output) if args.output else Path("results/backtest_mc")
+            create_full_monte_carlo_report(
+                trades_pnl,
+                output_dir=str(mc_output),
+                strategy_name=f"{args.entry}_backtest",
+                num_simulations=args.simulations,
+                show_plots=not args.no_show
+            )
+            print(f"\nMonte Carlo charts saved to: {mc_output}")
+
+        # Save results
+        if args.output:
+            output_data = {
+                "entry": args.entry,
+                "start_date": args.start_date,
+                "end_date": args.end_date,
+                "profit_factor": best.profit_factor,
+                "profit": best.profit,
+                "drawdown_percent": best.drawdown_percent,
+                "trades": best.trades,
+                "trades_pnl": trades_pnl,  # Individual trade P&L for Monte Carlo
+            }
+            output_path = Path(args.output) / "backtest_result.json"
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_path, 'w') as f:
+                json.dump(output_data, f, indent=2)
+            print(f"\nResults saved to: {output_path}")
+
+        return 0
+    else:
+        print(f"\nBacktest failed: {result.get('error', 'Unknown error')}")
+        return 1
+
+
 def cmd_monte_carlo(args):
     """Run Monte Carlo simulation on results."""
     from monte_carlo import MonteCarloSimulator
@@ -85,12 +187,14 @@ def cmd_monte_carlo(args):
         data = json.load(f)
 
     # Extract trades
-    if "trades" in data:
+    if "trades_pnl" in data:
+        trades = data["trades_pnl"]
+    elif "trades" in data:
         trades = data["trades"]
     elif "individual_trades" in data:
         trades = [t.get("profit", t.get("pnl", 0)) for t in data["individual_trades"]]
     else:
-        print("Error: Results file must contain 'trades' or 'individual_trades'")
+        print("Error: Results file must contain 'trades', 'trades_pnl', or 'individual_trades'")
         return 1
 
     print(f"Loaded {len(trades)} trades from {results_path}")
@@ -110,6 +214,18 @@ def cmd_monte_carlo(args):
         result = sim.run_block_bootstrap(args.simulations)
 
     print(result.to_summary())
+
+    # Generate visualizations if requested
+    if args.visualize:
+        from monte_carlo_viz import create_full_monte_carlo_report
+        output_dir = Path(args.output).parent if args.output else Path("results/monte_carlo")
+        create_full_monte_carlo_report(
+            trades,
+            output_dir=str(output_dir),
+            strategy_name=results_path.stem,
+            num_simulations=args.simulations,
+            show_plots=True
+        )
 
     # Save if requested
     if args.output:
@@ -373,6 +489,19 @@ def main():
     optimize_parser.add_argument("--goal", default="Maximize profit factor while keeping max drawdown below 5%")
     optimize_parser.set_defaults(func=cmd_optimize)
 
+    # Backtest command (single run with optional Monte Carlo)
+    bt_parser = subparsers.add_parser("backtest", help="Run single backtest with optional Monte Carlo")
+    bt_parser.add_argument("entry", choices=["TrendEng", "TrendEngWick", "TrendingGray", "TrueShift", "TDIBnR"])
+    bt_parser.add_argument("-p", "--params", nargs="*", help="Fixed parameters (NAME=value)")
+    bt_parser.add_argument("--start-date", default="2024.07.01", help="Backtest start date")
+    bt_parser.add_argument("--end-date", default="2025.12.31", help="Backtest end date")
+    bt_parser.add_argument("-t", "--timeout", type=int, default=600, help="Timeout in seconds")
+    bt_parser.add_argument("--monte-carlo", action="store_true", help="Run Monte Carlo analysis")
+    bt_parser.add_argument("-n", "--simulations", type=int, default=5000, help="Monte Carlo simulations")
+    bt_parser.add_argument("--no-show", action="store_true", help="Don't display plots (just save)")
+    bt_parser.add_argument("-o", "--output", default="results/backtest", help="Output directory")
+    bt_parser.set_defaults(func=cmd_backtest)
+
     # Monte Carlo command
     mc_parser = subparsers.add_parser("monte-carlo", help="Run Monte Carlo simulation")
     mc_parser.add_argument("results_file", help="JSON file with trade results")
@@ -380,6 +509,7 @@ def main():
     mc_parser.add_argument("-m", "--method", choices=["shuffle", "bootstrap", "block"], default="shuffle")
     mc_parser.add_argument("-b", "--balance", type=float, default=10000.0)
     mc_parser.add_argument("-r", "--ruin-threshold", type=float, default=10.0)
+    mc_parser.add_argument("-v", "--visualize", action="store_true", help="Generate visualization charts")
     mc_parser.add_argument("-o", "--output", help="Save results to JSON file")
     mc_parser.set_defaults(func=cmd_monte_carlo)
 

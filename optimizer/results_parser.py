@@ -363,7 +363,150 @@ class HTMLResultsParser:
         if results.losing_trades == 0 and results.total_trades > 0 and results.winning_trades > 0:
             results.losing_trades = results.total_trades - results.winning_trades
 
+        # Extract individual trades from deals table
+        results.trades = self._extract_trades(content)
+
+        # Calculate R metrics if we have trades
+        if results.trades:
+            results.calculate_r_metrics()
+
         return results
+
+    def _extract_trades(self, content: str) -> List[Trade]:
+        """
+        Extract individual trades from MT5 HTML report.
+
+        MT5 HTML reports contain a deals table with columns like:
+        Time, Deal, Symbol, Type, Direction, Volume, Price, Order, Commission, Swap, Profit, Balance, Comment
+        """
+        trades = []
+
+        # Find the deals table - look for table containing "Deals" header
+        # MT5 format: trades are in rows after header row containing deal info
+
+        # Pattern to find deal rows - they have specific structure
+        # Looking for rows with: time, deal#, symbol, type (buy/sell), direction (in/out), volume, price, etc.
+
+        # Try to find the deals section
+        deals_section_pattern = r'Deals</td>.*?</table>'
+        deals_match = re.search(deals_section_pattern, content, re.DOTALL | re.IGNORECASE)
+
+        if not deals_match:
+            # Alternative: look for table with trade data directly
+            # MT5 deal rows typically have timestamp, deal number, symbol, buy/sell, in/out/inout, volume, price
+            pass
+
+        # Pattern for individual deal rows
+        # Format: <tr>...<td>time</td><td>deal#</td><td>symbol</td><td>buy/sell</td><td>in/out</td><td>volume</td><td>price</td>...<td>profit</td>...
+        deal_row_pattern = r'<tr[^>]*>\s*<td[^>]*>(\d{4}\.\d{2}\.\d{2}\s+\d{2}:\d{2}:\d{2})</td>\s*<td[^>]*>(\d+)</td>\s*<td[^>]*>([^<]+)</td>\s*<td[^>]*>(buy|sell)</td>\s*<td[^>]*>(in|out|in/out)</td>\s*<td[^>]*>([^<]+)</td>\s*<td[^>]*>([^<]+)</td>\s*<td[^>]*>(\d*)</td>\s*<td[^>]*>([^<]*)</td>\s*<td[^>]*>([^<]*)</td>\s*<td[^>]*>([^<]*)</td>'
+
+        matches = re.findall(deal_row_pattern, content, re.IGNORECASE)
+
+        for match in matches:
+            try:
+                time_str, deal_num, symbol, trade_type, direction, volume, price, order, commission, swap, profit = match
+
+                # Only count "out" or "in/out" deals as completed trades (they have profit)
+                if direction.lower() in ['out', 'in/out']:
+                    profit_val = self._parse_number(profit)
+                    if profit_val is not None:  # Only add if we got a valid profit value
+                        trade = Trade(
+                            ticket=int(deal_num) if deal_num else 0,
+                            open_time="",  # Would need to match with 'in' deal
+                            close_time=time_str,
+                            type=trade_type.lower(),
+                            volume=self._parse_number(volume) or 0.0,
+                            symbol=symbol.strip(),
+                            open_price=0.0,  # Would need to match with 'in' deal
+                            close_price=self._parse_number(price) or 0.0,
+                            sl=0.0,
+                            tp=0.0,
+                            profit=profit_val,
+                            commission=self._parse_number(commission) or 0.0,
+                            swap=self._parse_number(swap) or 0.0,
+                            magic=0,
+                        )
+                        trades.append(trade)
+            except (ValueError, IndexError) as e:
+                continue
+
+        # If regex approach didn't work, try simpler profit extraction
+        if not trades:
+            trades = self._extract_trades_simple(content)
+
+        return trades
+
+    def _extract_trades_simple(self, content: str) -> List[Trade]:
+        """
+        Simplified trade extraction - just get profit values from deal rows.
+
+        This is a fallback if the full regex doesn't match MT5's format.
+        """
+        trades = []
+
+        # Look for profit values in deal table rows
+        # MT5 typically has profit in a column, often with color formatting for +/-
+
+        # Pattern: look for profit cells with values (green for profit, red for loss)
+        # <td ... style="color:green">123.45</td> or similar
+
+        # Find all table rows that look like deal rows (have multiple numeric columns)
+        row_pattern = r'<tr[^>]*>((?:<td[^>]*>[^<]*</td>\s*){8,})</tr>'
+        rows = re.findall(row_pattern, content, re.IGNORECASE | re.DOTALL)
+
+        for row in rows:
+            # Extract all cell values
+            cell_pattern = r'<td[^>]*>([^<]*)</td>'
+            cells = re.findall(cell_pattern, row, re.IGNORECASE)
+
+            if len(cells) >= 10:
+                # Try to find a profit value (typically near the end)
+                # Look for cells that look like money values
+                for i, cell in enumerate(cells[-5:]):  # Check last 5 cells
+                    cell_clean = cell.strip()
+                    # Check if it looks like a profit value (number, possibly negative)
+                    if re.match(r'^-?\d+\.?\d*$', cell_clean.replace(' ', '')):
+                        try:
+                            profit = float(cell_clean.replace(' ', ''))
+                            # Skip if it's likely a balance (too large) or volume (too small)
+                            if abs(profit) > 0.01 and abs(profit) < 100000:
+                                # Check if this could be a trade profit
+                                # Heuristic: if previous cell is also a number, might be swap/commission
+                                trade = Trade(
+                                    ticket=0,
+                                    open_time="",
+                                    close_time="",
+                                    type="",
+                                    volume=0.0,
+                                    symbol="",
+                                    open_price=0.0,
+                                    close_price=0.0,
+                                    sl=0.0,
+                                    tp=0.0,
+                                    profit=profit,
+                                    commission=0.0,
+                                    swap=0.0,
+                                    magic=0,
+                                )
+                                trades.append(trade)
+                                break  # Only one profit per row
+                        except ValueError:
+                            continue
+
+        return trades
+
+    def _parse_number(self, value: str) -> Optional[float]:
+        """Parse a number string, handling various formats."""
+        if not value:
+            return None
+        # Remove spaces and currency symbols
+        clean = re.sub(r'[^\d.\-]', '', value.strip())
+        if not clean or clean == '-':
+            return None
+        try:
+            return float(clean)
+        except ValueError:
+            return None
 
 
 def parse_results(filepath: str) -> BacktestResults:
@@ -398,6 +541,34 @@ def results_to_json(results: BacktestResults, filepath: str) -> None:
     """Save results to JSON file"""
     with open(filepath, 'w') as f:
         json.dump(results.to_dict(), f, indent=2)
+
+
+def extract_trade_pnl(results: BacktestResults) -> List[float]:
+    """
+    Extract just the P&L values from trades for Monte Carlo analysis.
+
+    Args:
+        results: BacktestResults with trades list
+
+    Returns:
+        List of trade profit/loss values
+    """
+    return [trade.profit for trade in results.trades if trade.profit != 0]
+
+
+def parse_html_for_trades(filepath: str) -> List[float]:
+    """
+    Convenience function to parse HTML report and return trade P&L list.
+
+    Args:
+        filepath: Path to MT5 HTML report
+
+    Returns:
+        List of trade profit/loss values for Monte Carlo
+    """
+    parser = HTMLResultsParser()
+    results = parser.parse(filepath)
+    return extract_trade_pnl(results)
 
 
 if __name__ == "__main__":
